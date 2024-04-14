@@ -1,0 +1,590 @@
+diff --git a/SDLDrv/Inc/SDLDrv.h b/SDLDrv/Inc/SDLDrv.h
+index 80d61ae..1997a09 100755
+--- a/SDLDrv/Inc/SDLDrv.h
++++ b/SDLDrv/Inc/SDLDrv.h
+@@ -45,6 +45,7 @@ extern "C" {
+ ----------------------------------------------------------------------------*/
+ 
+ #include <SDL2/SDL.h>
++#include <vector>
+ 
+ // Unreal includes.
+ #include "Engine.h"
+@@ -58,6 +59,11 @@ extern "C" {
+ class USDLViewport;
+ class USDLClient;
+ 
++struct PerWindowEvent {
++    UBOOL reset;
++    std::vector<SDL_Event> events;
++};
++
+ /*-----------------------------------------------------------------------------
+ 	USDLClient.
+ -----------------------------------------------------------------------------*/
+@@ -97,7 +103,9 @@ class USDLClient : public UClient, public FNotifyHook
+     static int JoystickHats;
+     static int JoystickBalls;
+ 
+-	// Constructors.
++    TMap<uintptr_t, PerWindowEvent> EventQueue;
++
++    // Constructors.
+ 	USDLClient();
+ 	void StaticConstructor();
+ 
+@@ -163,6 +171,8 @@ class USDLViewport : public UViewport
+ 	INT					TextToSpeechObject;  // file descriptor for named pipe.
+ 	DOUBLE              MouseScaleX; // Scaled coords
+ 	DOUBLE              MouseScaleY; // Scaled coords
++
++    UBOOL               MouseMovedSinceLastClickUp;
+ 	
+ 	#if MACOSX
+     UBOOL				MacTextToSpeechEnabled;
+@@ -210,6 +220,8 @@ class USDLViewport : public UViewport
+ 	TCHAR* GetLocalizedKeyName( EInputKey Key );
+ 	void TextToSpeech( const FString& Text, FLOAT Volume );
+ 	void UpdateSpeech();  // call once a frame from UpdateInput().
++
++    void UpdatePerWindowInput( const PerWindowEvent& Queue );
+ };
+ 
+ 
+diff --git a/SDLDrv/Src/SDLClient.cpp b/SDLDrv/Src/SDLClient.cpp
+index 9bd824a..4bcdcd4 100755
+--- a/SDLDrv/Src/SDLClient.cpp
++++ b/SDLDrv/Src/SDLClient.cpp
+@@ -265,8 +265,81 @@ UBOOL USDLClient::Exec( const TCHAR* Cmd, FOutputDevice& Ar )
+ void USDLClient::Tick()
+ {
+ 	guard(USDLClient::Tick);
+-	
+-	// Blit any viewports that need blitting.
++
++    if (GIsEditor) {
++
++        // Pump events here!
++        char      *sdl_error;
++        SDL_Event Event;
++        while (SDL_PollEvent(&Event)) {
++            uint32_t nWinID = 0;
++
++            // Fill-up the queue!
++            switch (Event.type) {
++                case SDL_QUIT:
++                    GIsRequestingExit = 1;
++                    break;
++                case SDL_KEYDOWN:
++                case SDL_KEYUP:
++                case SDL_TEXTINPUT:
++                    nWinID = Event.key.windowID;
++                    break;
++                case SDL_MOUSEBUTTONDOWN:
++                case SDL_MOUSEBUTTONUP:
++                    nWinID = Event.button.windowID;
++                    break;
++                case SDL_MOUSEWHEEL:
++                    nWinID = Event.wheel.windowID;
++                    break;
++                case SDL_MOUSEMOTION:
++                    nWinID = Event.motion.windowID;
++                    break;
++                case SDL_WINDOWEVENT:
++                    nWinID = Event.window.windowID;
++                    break;
++            }
++
++            auto           pCheck = EventQueue.Find(nWinID);
++            PerWindowEvent pData;
++
++            if (!pCheck) {
++                //pData.reset = Reset;
++                pData.events.push_back(Event);
++            } else {
++                pData = *pCheck;
++                //pData.reset = Reset;
++                pData.events.push_back(Event);
++            }
++
++            EventQueue.Set(nWinID, pData);
++        }
++
++        bool     HandledWinIDZero = false;
++        // Just update each viewport
++        for (INT i                = 0; i < Viewports.Num(); i++) {
++            USDLViewport *Viewport = CastChecked<USDLViewport>(Viewports(i));
++            Viewport->Repaint(1);
++
++            auto pWinID = (uintptr_t) SDL_GetWindowID(Viewport->Window);
++            auto pQueue = EventQueue.Find(pWinID);
++
++            if (pQueue) {
++                Viewport->UpdatePerWindowInput(*pQueue);
++            }
++            if (!HandledWinIDZero) {
++                pQueue = EventQueue.Find(0);
++                if (pQueue) {
++                    Viewport->UpdatePerWindowInput(*pQueue);
++                    HandledWinIDZero = true;
++                }
++            }
++        }
++
++        // Clear the queue
++        EventQueue.Empty();
++    }
++
++    // Blit any viewports that need blitting.
+   	for( INT i=0; i<Viewports.Num(); i++ )
+ 	{
+ 		USDLViewport* Viewport = CastChecked<USDLViewport>(Viewports(i));
+diff --git a/SDLDrv/Src/SDLViewport.cpp b/SDLDrv/Src/SDLViewport.cpp
+index 54c8a1b..85562bf 100755
+--- a/SDLDrv/Src/SDLViewport.cpp
++++ b/SDLDrv/Src/SDLViewport.cpp
+@@ -81,6 +81,8 @@ USDLViewport::USDLViewport()
+ 
+     TextToSpeechObject = -1;
+ 
++    MouseMovedSinceLastClickUp = 0;
++
+     #if MACOSX
+     MacTextToSpeechEnabled = 0;
+     #endif
+@@ -930,6 +932,11 @@ void USDLViewport::UpdateInput( UBOOL Reset )
+ 
+ 	UpdateSpeech();
+ 
++    // MultiEd: UpdateInput is actually handled in Client Tick
++    if (GIsEditor) {
++        return;
++    }
++
+ 	FTime UpdateTime = appSeconds();
+ 	FLOAT DeltaSeconds = UpdateTime - LastUpdateTime;
+ 	LastUpdateTime = UpdateTime;
+@@ -1725,6 +1732,423 @@ void USDLViewport::TextToSpeech( const FString& Text, FLOAT Volume )
+     UpdateSpeech();
+ }
+ 
++
++void USDLViewport::UpdatePerWindowInput( const PerWindowEvent& Queue ) {
++    guard(USDLViewport::UpdatePerWindowInput);
++
++            UpdateSpeech();
++
++            FTime UpdateTime = appSeconds();
++            FLOAT DeltaSeconds = UpdateTime - LastUpdateTime;
++            LastUpdateTime = UpdateTime;
++
++            USDLClient* Client = GetOuterUSDLClient();
++
++            if ((Client->UseJoystick) && (USDLClient::Joystick != NULL))
++            {
++                SDL_JoystickUpdate();
++
++                int i;
++                int max = USDLClient::JoystickButtons;
++                for (i = 0; i < max; i++)
++                {
++                    Uint8 state = SDL_JoystickGetButton(USDLClient::Joystick, i);
++                    INT Button = IK_Joy1 + i;
++                    if( !Input->KeyDown( Button ) && (state == SDL_PRESSED) )
++                        CauseInputEvent( Button, IST_Press );
++                    else if( Input->KeyDown( Button ) && (state != SDL_PRESSED) )
++                        CauseInputEvent( Button, IST_Release );
++                }
++
++                static EInputKey axes[] = { IK_JoyX, IK_JoyY, IK_JoyZ, IK_JoyR, IK_JoyU, IK_JoyV }; //, IK_JoySlider1, IK_JoySlider2 };
++                check(USDLClient::JoystickAxes <= 8);
++                for (i = 0; i < USDLClient::JoystickAxes; i++)
++                {
++                    float pos = SDL_JoystickGetAxis(USDLClient::Joystick, i) / 65535.f;
++                    //Input->DirectAxis(axes[i], pos, DeltaSeconds);
++                    //JoystickInputEvent(pos, axes[i], 1.0f /*Client->ScaleXYZ*/, 0.0f /*Client->DeadZoneXYZ*/);
++                    CauseInputEvent( axes[i], IST_Axis, pos );
++                }
++            }
++
++            // Keyboard.
++            //EInputKey Key 	    = IK_None;
++            //EInputKey UpperCase = IK_None;
++            //EInputKey LowerCase = IK_None;
++
++            // Mouse movement management.
++            UBOOL MouseMoved = false;
++            UBOOL JoyHatMoved = false;
++            FLOAT DX = 0, DY = 0;
++            FLOAT AbsX = 0, AbsY = 0;
++            EInputKey ThisJoyHat = IK_None;
++
++            bool mouse_focus, input_focus, app_focus;
++
++            for(auto Event : Queue.events)
++            {
++                switch( Event.type )
++                {
++                    case SDL_QUIT:
++                        GIsRequestingExit = 1;
++                        break;
++
++                    case SDL_KEYDOWN:
++                        if ( (Event.key.keysym.sym == SDLK_g) && (Event.key.keysym.mod & KMOD_CTRL) )
++                        {
++                            UpdateMouseGrabState(!MouseIsGrabbed);
++                            break;  // Don't pass event to engine.
++                        }
++
++                        else if ( (Event.key.keysym.sym == SDLK_RETURN) && (Event.key.keysym.mod & KMOD_ALT) )
++                        {
++                            ToggleFullscreen();
++                            break;  // Don't pass event to engine.
++                        }
++
++                        else
++                        {
++                            // Get key code.
++                            const BYTE *pInputKey = KeysymMap.Find(Event.key.keysym.sym);
++                            const EInputKey Key = pInputKey ? (EInputKey) *pInputKey : IK_None;
++
++                            // Send key to input system.
++                            if (Key != IK_None) {
++                                CauseInputEvent(Key, IST_Press);
++                                Client->Engine->Key( this, Key );
++                            }
++                        }
++
++                        break;
++
++                    case SDL_KEYUP: {
++                        // Get key code.
++                        const BYTE *pInputKey = KeysymMap.Find(Event.key.keysym.sym);
++                        const EInputKey Key = pInputKey ? (EInputKey) *pInputKey : IK_None;
++
++                        // Send key to input system.
++                        if (Key != IK_None) {
++                            CauseInputEvent(Key, IST_Release);
++                        }
++                        // Redraw if needed.
++                        if( !IsRealtime() )
++                            Repaint( 1 );
++                        break;
++                    }
++
++                    case SDL_TEXTINPUT:
++                        for (const char *ptr = Event.text.text; *ptr; ptr++)
++                        {
++                            const char ch = *ptr;  // !!! FIXME: add UTF-8 support?
++                            if( ch!=IK_Enter )
++                                Client->Engine->Key( this, (EInputKey) ch );
++                        }
++                        break;
++
++                    case SDL_MOUSEBUTTONDOWN:
++                        switch (Event.button.button)
++                        {
++                            case 1: CauseInputEvent( IK_LeftMouse, IST_Press ); break;
++                            case 2: CauseInputEvent( IK_MiddleMouse, IST_Press ); break;
++                            case 3: CauseInputEvent( IK_RightMouse, IST_Press ); break;
++                            case 4: CauseInputEvent( IK_MouseButton4, IST_Press ); break;
++                            case 5: CauseInputEvent( IK_MouseButton5, IST_Press ); break;
++                            case 6: CauseInputEvent( IK_MouseButton6, IST_Press ); break;
++                            case 7: CauseInputEvent( IK_MouseButton7, IST_Press ); break;
++                            case 8: CauseInputEvent( IK_MouseButton8, IST_Press ); break;
++                        }
++                        break;
++
++                    case SDL_MOUSEBUTTONUP: {
++                        INT       DeltaTime, Button = 0;
++
++                        switch (Event.button.button)
++                        {
++                            case 1: CauseInputEvent( IK_LeftMouse, IST_Release ); break;
++                            case 2: CauseInputEvent( IK_MiddleMouse, IST_Release ); break;
++                            case 3: CauseInputEvent( IK_RightMouse, IST_Release ); break;
++                            case 4: CauseInputEvent( IK_MouseButton4, IST_Release ); break;
++                            case 5: CauseInputEvent( IK_MouseButton5, IST_Release ); break;
++                            case 6: CauseInputEvent( IK_MouseButton6, IST_Release ); break;
++                            case 7: CauseInputEvent( IK_MouseButton7, IST_Release ); break;
++                            case 8: CauseInputEvent( IK_MouseButton8, IST_Release ); break;
++                        }
++
++                        if (Event.button.button == SDL_BUTTON_LEFT) {
++                            Button |= MOUSE_Left;
++                        }
++                        if (Event.button.button == SDL_BUTTON_MIDDLE) {
++                            Button |= MOUSE_Middle;
++                        }
++                        if (Event.button.button == SDL_BUTTON_RIGHT) {
++                            Button |= MOUSE_Right;
++                        }
++
++                        if (Button != 0 && !MouseMoved && !MouseMovedSinceLastClickUp) {
++                            GetMouseState(&MouseLeaveX, &MouseLeaveY);
++
++                            Client->Engine->Click(this, Button, MouseLeaveX, MouseLeaveY);
++                            if (!IsRealtime()) {
++                                Repaint(1);
++                            }
++                        }
++                        MouseMovedSinceLastClickUp = false;
++
++                    }
++                        break;
++
++                    case SDL_MOUSEWHEEL:
++                        if (Event.wheel.y)
++                        {
++                            CauseInputEvent( IK_MouseW, IST_Axis, Event.wheel.y );
++                            if( Event.wheel.y < 0 )
++                            {
++                                CauseInputEvent( IK_MouseWheelDown, IST_Press );
++                                CauseInputEvent( IK_MouseWheelDown, IST_Release );
++                            }
++                            else
++                            {
++                                CauseInputEvent( IK_MouseWheelUp, IST_Press );
++                                CauseInputEvent( IK_MouseWheelUp, IST_Release );
++                            }
++                        }
++                        break;
++
++                    case SDL_MOUSEMOTION: {
++
++                        auto nWidth = 0;
++                        auto nHeight = 0;
++
++
++                        MouseMoved = true;
++                        AbsX       = Event.motion.x * MouseScaleX;
++                        AbsY       = Event.motion.y * MouseScaleY;
++                        DX += Event.motion.xrel * MouseScaleX;
++                        DY += Event.motion.yrel * MouseScaleY;
++                        if (!MouseIsGrabbed &&
++                            SelectedCursor >= 0 &&
++                            SelectedCursor <= ARRAY_COUNT(StandardCursors) &&
++                            StandardCursors[SelectedCursor]) {
++                            SDL_SetCursor(StandardCursors[SelectedCursor]);
++                            ActiveCursor = StandardCursors[SelectedCursor];
++                        }
++
++                        auto thresh = AbsX + AbsY > 10;
++
++                        // Move viewport with buttons.
++                        if (thresh && (DX || DY)) {
++                            DWORD ButtonFlags = 0;
++
++                            // Grab button states
++                            auto nMouseState = SDL_GetMouseState(nullptr, nullptr);
++                            auto nKeyState   = SDL_GetKeyboardState(nullptr);
++
++                            if (nMouseState & SDL_BUTTON_LMASK) {
++                                ButtonFlags |= MOUSE_Left;
++                            }
++                            if (nMouseState & SDL_BUTTON_MMASK) {
++                                ButtonFlags |= MOUSE_Middle;
++                            }
++                            if (nMouseState & SDL_BUTTON_RMASK) {
++                                ButtonFlags |= MOUSE_Right;
++                            }
++
++                            if (nKeyState[SDL_SCANCODE_LSHIFT] || nKeyState[SDL_SCANCODE_RSHIFT]) {
++                                ButtonFlags |= MOUSE_Shift;
++                            }
++                            if (nKeyState[SDL_SCANCODE_LCTRL] || nKeyState[SDL_SCANCODE_RCTRL]) {
++                                ButtonFlags |= MOUSE_Ctrl;
++                            }
++                            if (nKeyState[SDL_SCANCODE_LALT] || nKeyState[SDL_SCANCODE_RALT]) {
++                                ButtonFlags |= MOUSE_Alt;
++                            }
++
++                            // Oh we're gonna do something, set the flag
++                            if (GIsEditor && ButtonFlags) {
++                                MouseMovedSinceLastClickUp = true;
++                            }
++
++                            // Viewport isn't realtime, so we must update the frame here and now.
++                            if( MouseMoved && !IsRealtime() )
++                            {
++                                if( Input->KeyDown(IK_Space) )
++                                    for( INT i=0; i<Client->Viewports.Num(); i++ )
++                                        Client->Viewports(i)->Repaint( 1 );
++                                else
++                                    Repaint( 1 );
++                            }
++
++
++                            Client->Engine->MouseDelta(this, ButtonFlags, DX, DY);
++                        }
++                    }
++                        break;
++
++                    case SDL_JOYBALLMOTION:
++                        if ( Event.jball.which != Client->JoystickNumber || !Client->UseJoystick )
++                            break;
++                        MouseMoved = true;
++                        DX += Event.jball.xrel * Client->ScaleJBX;
++                        DY += Event.jball.yrel * Client->ScaleJBY;
++                        break;
++
++                    case SDL_JOYHATMOTION:
++                        if ( (Event.jhat.which != Client->JoystickNumber) ||
++                             (Event.jhat.hat != Client->JoystickHatNumber) ||
++                             (!Client->UseJoystick) ||
++                             (Client->IgnoreHat) )
++                        {
++                            break;
++                        }
++
++                        JoyHatMoved = true;
++
++                        switch ( Event.jhat.value )
++                        {
++                            case SDL_HAT_UP :
++                                ThisJoyHat = IK_Joy13;
++                                break;
++                            case SDL_HAT_DOWN :
++                                ThisJoyHat = IK_Joy14;
++                                break;
++                            case SDL_HAT_LEFT :
++                                ThisJoyHat = IK_Joy15;
++                                break;
++                            case SDL_HAT_RIGHT :
++                                ThisJoyHat = IK_Joy16;
++                                break;
++                            default :
++                                ThisJoyHat = (EInputKey) 0;
++                                break;
++                        }
++                        break;
++
++                    case SDL_WINDOWEVENT:
++                        if (Event.window.event == SDL_WINDOWEVENT_ENTER)
++                        {
++                            // resynchronize mouse position
++                            GetMouseState(&MouseEnterX, &MouseEnterY);
++                            MouseMoved = true;
++                            AbsX = MouseEnterX;
++                            AbsY = MouseEnterY;
++#ifdef MOUSE_DEBUG
++                            fprintf(stderr, "Mouse entered at: %d %d\n", MouseEnterX, MouseEnterY);
++#endif
++                        }
++                        else if (Event.window.event == SDL_WINDOWEVENT_LEAVE)
++                        {
++                            GetMouseState(&MouseLeaveX, &MouseLeaveY);
++                            MouseMoved = true;
++                            AbsX = MouseLeaveX;
++                            AbsY = MouseLeaveY;
++#ifdef MOUSE_DEBUG
++                            fprintf(stderr, "Mouse left at: %d %d\n", MouseLeaveX, MouseLeaveY);
++#endif
++                        }
++                        else if (Event.window.event == SDL_WINDOWEVENT_RESIZED)
++                        {
++                            INT NewX = (IsFullscreen() ? 1 : MouseScaleX) * Event.window.data1;
++                            INT NewY = (IsFullscreen() ? 1 : MouseScaleY) * Event.window.data2;
++
++                            // stijn: macOS Retina support
++                            if (RenDev && (BlitFlags & BLIT_OpenGL))
++                            {
++                                INT WindowPointSizeX, WindowPointSizeY, WindowPixelSizeX, WindowPixelSizeY;
++                                SDL_GetWindowSize(Window, &WindowPointSizeX, &WindowPointSizeY);
++                                SDL_GL_GetDrawableSize(Window, &WindowPixelSizeX, &WindowPixelSizeY);
++
++                                // This will spam our logs
++                                if (!GIsEditor) {
++                                    debugf(TEXT(
++                                               "SDL_WINDOWEVENT_RESIZED: %dx%d - Effective Point Size: %dx%d - GLPixel Size %dx%d"),
++                                           NewX, NewY, WindowPointSizeX, WindowPointSizeY, WindowPixelSizeX, WindowPixelSizeY);
++                                }
++
++                                if (WindowPixelSizeX > NewX || WindowPixelSizeY > NewY)
++                                {
++                                    NewX = WindowPixelSizeX;
++                                    NewY = WindowPixelSizeY;
++                                }
++                            }
++
++                            if (RenDev && (BlitFlags & (BLIT_OpenGL|BLIT_Direct3D)))
++                            {
++                                RenDev->SetRes(NewX, NewY, ColorBytes, BlitFlags & BLIT_Fullscreen);
++                            }
++                            else
++                            {
++                                ResizeViewport(BlitFlags|BLIT_NoWindowChange, NewX, NewY, ColorBytes);
++                            }
++
++                            if (GIsEditor)
++                                Repaint(0);
++                        }
++                        break;
++
++                    default:;
++                }
++            }
++
++            // Deliver mouse behavior to the engine.
++            if ( MouseMoved )
++            {
++                if (!MouseIsGrabbed)
++                {
++                    DX = AbsX - WindowsMouseX;
++                    DY = AbsY - WindowsMouseY;
++                }
++
++                // Send to input subsystem.
++                if( DX )
++                    CauseInputEvent( IK_MouseX, IST_Axis, +DX );
++
++                if( DY )
++                    CauseInputEvent( IK_MouseY, IST_Axis, -DY );
++
++                if (!Client->InMenuLoop)
++                    Client->Engine->MouseDelta(this, 0, DX, DY);
++
++                if (!IsRealtime())
++                {
++                    if( Input->KeyDown(IK_Space) )
++                    {
++                        for( INT i=0; i<Client->Viewports.Num(); i++ )
++                            Client->Viewports(i)->Repaint( 1 );
++                    }
++                    else
++                    {
++                        Repaint( 1 );
++                    }
++                }
++
++                WindowsMouseX = AbsX;
++                WindowsMouseY = AbsY;
++
++                if (WindowsMouseX > SizeX)
++                    WindowsMouseX = SizeX;
++
++                if (WindowsMouseX < 0)
++                    WindowsMouseX = 0;
++
++                if (WindowsMouseY > SizeY)
++                    WindowsMouseY = SizeY;
++
++                if (WindowsMouseY < 0)
++                    WindowsMouseY = 0;
++            }
++
++            if ( (LastJoyHat != ThisJoyHat) && JoyHatMoved )
++            {
++                if (LastJoyHat)
++                    CauseInputEvent( LastJoyHat, IST_Release );
++                if (ThisJoyHat)
++                    CauseInputEvent( ThisJoyHat, IST_Press );
++                LastJoyHat = ThisJoyHat;
++            }
++
++    unguard;
++}
++
+ /*-----------------------------------------------------------------------------
+ 	The End.
+ -----------------------------------------------------------------------------*/

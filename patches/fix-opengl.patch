@@ -1,0 +1,13 @@
+diff --git a/UTGLROpenGLDrv/Src/OpenGL_Unix.cpp b/UTGLROpenGLDrv/Src/OpenGL_Unix.cpp
+index 00bb24aa..d8718045 100644
+--- a/UTGLROpenGLDrv/Src/OpenGL_Unix.cpp
++++ b/UTGLROpenGLDrv/Src/OpenGL_Unix.cpp
+@@ -115,7 +115,7 @@ bool FOpenGLBase::MakeCurrent( void* OnWindow)
+ 		if ( Context && (Context != CurrentContext || OnWindow != CurrentWindow) )
+ 		{
+ 			Window = OnWindow;
+-			if ( !SDL_GL_MakeCurrent((SDL_Window*)Window, (SDL_GLContext)Context) )
++			if ( SDL_GL_MakeCurrent((SDL_Window*)Window, (SDL_GLContext)Context) > 0 )
+ 			{
+ 				if ( CurrentContext || CurrentWindow )
+ 				{
