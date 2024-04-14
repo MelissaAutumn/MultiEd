@@ -16,11 +16,7 @@ void Services::HelperAPI::LoadMap() {
         QStringList files = QFileDialog::getOpenFileNames(
                 nullptr,
                 "Load Map",
-#ifdef _DEBUG
-                "/mnt/nvme/Games/UT99/Maps/",
-#else
                 "../Maps",
-#endif
                 "Map Files (*.unr)");
 
         if(files.isEmpty()) {
