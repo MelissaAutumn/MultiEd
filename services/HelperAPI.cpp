@@ -13,17 +13,17 @@ using namespace Services;
 
 void Services::HelperAPI::LoadMap() {
 
-        QStringList files = QFileDialog::getOpenFileNames(
+        auto file = QFileDialog::getOpenFileName(
                 nullptr,
                 "Load Map",
                 "../Maps",
                 "Map Files (*.unr)");
 
-        if(files.isEmpty()) {
+        if(file.isEmpty()) {
             return;
         }
 
-        g_pEditorAPI->LoadMap(files.first().toStdWString().c_str());
+        g_pEditorAPI->LoadMap(file.toStdWString().c_str());
 
 }
 
