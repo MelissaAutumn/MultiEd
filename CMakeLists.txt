@@ -8,7 +8,11 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 # Defines
+if (WIN32)
+# ???
+else()
 add_compile_definitions("__LINUX_X86__")
+endif()
 add_compile_definitions("BUILD_64")
 add_compile_definitions("_DEBUG")
 
@@ -37,8 +41,6 @@ add_executable(MultiEd main.cpp
         components/SideBar/BrushBar.h
         components/SideBar/CSGBar.h
         components/SideBar/MiscBar.h
-        #bootstrap_unreal.cpp
-        #bootstrap_unreal.h
         components/SideBar/OrderedSideBar.h
         components/Menu/FileMenu.h
         components/Menu/EditMenu.h
@@ -87,27 +89,34 @@ add_executable(MultiEd main.cpp
         )
 
 # Setup some links to shared libraries
-# Core.so
 add_library(Core SHARED IMPORTED)
-set_target_properties(Core PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/Core.so")
-target_include_directories(Core INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Core/Inc/")
-# Engine.so
 add_library(Engine SHARED IMPORTED)
-set_target_properties(Engine PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/Engine.so")
-target_include_directories(Engine INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Engine/Inc/")
-# Editor.so
 add_library(Editor SHARED IMPORTED)
-set_target_properties(Editor PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/Editor.so")
-target_include_directories(Editor INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Editor/Inc/")
-target_include_directories(Editor INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Editor/Src/")
-# ALAudio.so
-add_library(ALAudio SHARED IMPORTED services/Services.h)
-set_target_properties(ALAudio PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/ALAudio.so")
-target_include_directories(ALAudio INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/ALAudio/Inc/")
-# SDLDrv.so
+add_library(ALAudio SHARED IMPORTED)
 add_library(SDLDrv SHARED IMPORTED)
+
+if (WIN32)
+set_target_properties(Core PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System/Core.dll")
+set_target_properties(Engine PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System/Engine.dll")
+set_target_properties(Editor PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System/Editor.dll")
+set_target_properties(ALAudio PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System/ALAudio.dll")
+set_target_properties(SDLDrv PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System/SDLDrv.dll")
+else()
+set_target_properties(Core PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/Core.so")
+set_target_properties(Engine PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/Engine.so")
+set_target_properties(Editor PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/Editor.so")
+set_target_properties(ALAudio PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/ALAudio.so")
 set_target_properties(SDLDrv PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/SDLDrv.so")
+endif()
+
+# Includes
+target_include_directories(Core INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Core/Inc/")
+target_include_directories(Engine INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Engine/Inc/")
+target_include_directories(Editor INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Editor/Inc/")
+target_include_directories(Editor INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Editor/Src/")  # Do I need this or was this a typo..
+target_include_directories(ALAudio INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/ALAudio/Inc/")
 target_include_directories(SDLDrv INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/SDLDrv/Inc/")
+
 # End
 
 
