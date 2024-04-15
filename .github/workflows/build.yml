@@ -4,9 +4,9 @@ name: Build MultiEd
 
 on:
   push:
-    branches: [gh]
+    branches: [main]
   pull_request:
-    branches: [gh]
+    branches: [main]
 
 permissions:
   contents: read
