@@ -35,32 +35,35 @@ namespace Components {
     class MultiEdWindow : public QMainWindow {
 
     private:
-        /**
-         * Temp until we fill the viewport with something neat!
-         * @param pViewport
-         */
-        static void LoadAndSetRandomSplash(QMainWindow* pViewport);
+        QMainWindow* m_pViewport{};
+        ViewportSplitterContainer* m_pQuadView{};
 
-        QMainWindow* m_pViewport;
-        Services::EditorAPI* m_pEditorAPI;
-        ViewportSplitterContainer* m_pQuadView;
+        std::vector<Viewport*> m_viewports;
 
-        void resizeEvent(QResizeEvent*);
-        void moveEvent(QMoveEvent *event);
+        // Components
+        QDockWidget* m_pDockWidget{};
+        OrderedSideBar* m_pOrderedSideBar{};
+        FileMenu* m_pFileMenu{};
+        EditMenu* m_pEditMenu{};
+        ViewMenu* m_pViewMenu{};
+        BrushMenu* m_pBrushMenu{};
+        ActorMenu* m_pActorMenu{};
+        BuildMenu* m_pBuildMenu{};
+        ToolsMenu* m_pToolsMenu{};
+        HelpMenu* m_pHelpMenu{};
+        ToolBar* m_pToolbar{};
 
     public:
         MultiEdWindow() : QMainWindow() {
 
         }
 
+        ~MultiEdWindow() override;
+
         void Init();
-        Services::EditorAPI* EditorAPI() { return m_pEditorAPI; }
         void SetViewport(QWidget* pWidget, WId nWindowID, Helpers::ViewportModes nMode);
 
-        SDL_Window* m_pSDLWindow;
-
-        //LogWindow m_LogWindow;
-
+        SDL_Window* m_pSDLWindow{};
     };
 }
 

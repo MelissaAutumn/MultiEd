@@ -2,6 +2,13 @@
 // Created by melissaa on 2022-04-30.
 //
 
+/**
+ * Unreal Glue
+ * This handles all interactions with the Unreal Engine.
+ * It's pretty much just a fancy SDLLaunch with some extra hacks in there to get it booting the editor code-path.
+ */
+
+
 #include "Core.h"
 #include "Engine.h"
 #include "EditorPrivate.h"
@@ -21,27 +28,32 @@
 #undef Success
 #endif
 
-TCHAR GPackageInternal[64]=TEXT("MultiEd");
-extern "C" {const TCHAR* GPackage=GPackageInternal;}
+TCHAR GPackageInternal[64] = TEXT("MultiEd");
+extern "C" { const TCHAR *GPackage = GPackageInternal; }
 
 // Memory allocator.
 #include "FMallocAnsi.h"
+
 FMallocAnsi Malloc;
 
 // Log file.
 #include "FOutputDeviceFile.h"
+
 FOutputDeviceFile Log;
 
 // Error handler.
 #include "../FOutputDeviceSDLError.h"
+
 FOutputDeviceSDLError Error;
 
 // Feedback.
 #include "../FFeedbackContextSDL.h"
+
 FFeedbackContextSDL Warn;
 
 // File manager.
 #include "FFileManagerLinux.h"
+
 FFileManagerLinux FileManager;
 
 // Config.
@@ -50,17 +62,17 @@ FFileManagerLinux FileManager;
 #include "../components/LogWindow/LogWindow.h"
 
 enum eLASTDIR {
-    eLASTDIR_UNR = 0,
-    eLASTDIR_UTX = 1,
-    eLASTDIR_PCX = 2,
-    eLASTDIR_UAX = 3,
-    eLASTDIR_WAV = 4,
+    eLASTDIR_UNR   = 0,
+    eLASTDIR_UTX   = 1,
+    eLASTDIR_PCX   = 2,
+    eLASTDIR_UAX   = 3,
+    eLASTDIR_WAV   = 4,
     eLASTDIR_BRUSH = 5,
-    eLASTDIR_2DS = 6,
-    eLASTDIR_USM = 7,
-    eLASTDIR_UMX = 8,
-    eLASTDIR_MUS = 9,
-    eLASTDIR_MAX = 10
+    eLASTDIR_2DS   = 6,
+    eLASTDIR_USM   = 7,
+    eLASTDIR_UMX   = 8,
+    eLASTDIR_MUS   = 9,
+    eLASTDIR_MAX   = 10
 };
 
 const INT s_DefaultViewportFlags =
@@ -74,8 +86,7 @@ const INT s_DefaultViewportFlags =
               | SHOW_Coords
               // SDLDrv doesn't handle non-realtime viewports, so just make them all realtime for now.
               //| SHOW_PlayerCtrl // Let's the viewport update
-              | SHOW_RealTime
-;
+              | SHOW_RealTime;
 
 FString GLastDir[eLASTDIR_MAX];
 
@@ -89,25 +100,24 @@ EDITOR_API FString GMapExt;
 //class qtLogWindow;
 class LogWindow : public FOutputDevice {
 public:
-    FOutputDevice* AuxOut;
-    Components::qtLogWindow* LogWin;
+    FOutputDevice           *AuxOut;
+    Components::qtLogWindow *LogWin;
     //wxLogWindow* LogWin;
     //FramePos* MyFramePos;
     UBOOL ShowLog;
+
     LogWindow()
-        : AuxOut( nullptr )
-        , LogWin( nullptr )
+        : AuxOut(nullptr), LogWin(nullptr)
         //, MyFramePos( NULL )
-        , ShowLog( FALSE )
-    {}
-    void Serialize( const TCHAR* V, EName Event )
-    {
-        guard(LogWindow::Serialize);
+        , ShowLog(FALSE) {}
+
+    void Serialize(const TCHAR *V, EName Event) {
+        guard(LogWindow::Serialize) ;
                 if (LogWin) {
                     LogWin->Log(V);
                     //wxLogMessage(wxT("%s"), V);
                 }
-                if( AuxOut ) {
+                if (AuxOut) {
                     AuxOut->Serialize(V, Event);
                 }
         unguard;
@@ -120,20 +130,21 @@ LogWindow g_LogWindow;
  * Exit handler
  * Helps us track down some obscure bugs, and clean up!
  */
-static void sdl_atexit_handler(void)
-{
+static void sdl_atexit_handler(void) {
     static bool already_called = false;
 
-    if (!already_called)
-    {
-        warnf(TEXT("Shutdown notice received but MultiEd."));
-
+    // Don't log here!
+    if (!already_called) {
         already_called = true;
         SDL_Quit();
     }
 }
 
-
+/**
+ * Boot UE similar to how SDLLaunch might.
+ * @param argc
+ * @param argv
+ */
 void UnrealGlue::Boot(int argc, char **argv) {
     // For FString?
     Malloc.Init();
@@ -157,10 +168,9 @@ void UnrealGlue::Boot(int argc, char **argv) {
     guard(load_unreal)
             try {
                 // Get the command line.
-                FString CmdLine;
-                for( INT i=1; i<argc; i++ )
-                {
-                    if( i>1 )
+                FString  CmdLine;
+                for (INT i = 1; i < argc; i++) {
+                    if (i > 1)
                         CmdLine += TEXT(" ");
                     CmdLine += ANSI_TO_TCHAR(argv[i]);
                 }
@@ -188,9 +198,9 @@ void UnrealGlue::Boot(int argc, char **argv) {
 
                 Log.Filename = TmpFilename;
 
-                GIsGuarded=1;
-                GIsStarted = 1;
-                GIsClient = GIsServer = GIsEditor = GLazyLoad = 1;
+                GIsGuarded = 1;
+                GIsStarted    = 1;
+                GIsClient     = GIsServer = GIsEditor = GLazyLoad = 1;
                 GIsScriptable = 0;
 
                 atexit(sdl_atexit_handler);
@@ -216,13 +226,12 @@ void UnrealGlue::Boot(int argc, char **argv) {
                     warnf(TEXT("OpenGLDrv Setting Conflict With MultiEd: Due to a bug work-around with OpenGLDrv. ColorCorrectionMode has been set to UseGammaRamp. However this will only apply on the next load. Please re-launch MultiEd for this to take effect."));
                 }
 
-                debugf( NAME_Init, TEXT("Booting MultiEd's Unreal integration") );
+                debugf(NAME_Init, TEXT("Booting MultiEd's Unreal integration"));
 
                 // Init console log.
-                if (ParseParam(*CmdLine, TEXT("LOG")))
-                {
-                    Warn.AuxOut	= GLog;
-                    GLog		= &Warn;
+                if (ParseParam(*CmdLine, TEXT("LOG"))) {
+                    Warn.AuxOut = GLog;
+                    GLog = &Warn;
                 }
 
                 // Init engine.
@@ -231,22 +240,22 @@ void UnrealGlue::Boot(int argc, char **argv) {
 
                 {
                     // Initialize "last dir" array
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("PCX"), GLastDir[eLASTDIR_PCX], GUEDIni))		GLastDir[eLASTDIR_PCX] = TEXT("..\\Textures");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("WAV"), GLastDir[eLASTDIR_WAV], GUEDIni))		GLastDir[eLASTDIR_WAV] = TEXT("..\\Sounds");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("BRUSH"), GLastDir[eLASTDIR_BRUSH], GUEDIni))		GLastDir[eLASTDIR_BRUSH] = TEXT("..\\Maps");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("2DS"), GLastDir[eLASTDIR_2DS], GUEDIni))		GLastDir[eLASTDIR_2DS] = TEXT("..\\Maps");
-#if ENGINE_VERSION==227
+                    if (!GConfig->GetString(TEXT("Directories"), TEXT("PCX"), GLastDir[eLASTDIR_PCX], GUEDIni)) GLastDir[eLASTDIR_PCX]       = TEXT("..\\Textures");
+                    if (!GConfig->GetString(TEXT("Directories"), TEXT("WAV"), GLastDir[eLASTDIR_WAV], GUEDIni)) GLastDir[eLASTDIR_WAV]       = TEXT("..\\Sounds");
+                    if (!GConfig->GetString(TEXT("Directories"), TEXT("BRUSH"), GLastDir[eLASTDIR_BRUSH], GUEDIni)) GLastDir[eLASTDIR_BRUSH] = TEXT("..\\Maps");
+                    if (!GConfig->GetString(TEXT("Directories"), TEXT("2DS"), GLastDir[eLASTDIR_2DS], GUEDIni)) GLastDir[eLASTDIR_2DS]       = TEXT("..\\Maps");
+#if ENGINE_VERSION == 227
                     if (!GConfig->GetString(TEXT("Directories"), TEXT("USM"), GLastDir[eLASTDIR_USM], GUEDIni))		GLastDir[eLASTDIR_USM] = TEXT("..\\Meshes");
 #else
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("USM"), GLastDir[eLASTDIR_USM], GUEDIni))		GLastDir[eLASTDIR_USM] = TEXT("..\\System");
+                    if (!GConfig->GetString(TEXT("Directories"), TEXT("USM"), GLastDir[eLASTDIR_USM], GUEDIni)) GLastDir[eLASTDIR_USM] = TEXT("..\\System");
 #endif
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UMX"), GLastDir[eLASTDIR_UMX], GUEDIni))		GLastDir[eLASTDIR_UMX] = TEXT("..\\Music");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UAX"), GLastDir[eLASTDIR_UAX], GUEDIni))		GLastDir[eLASTDIR_UAX] = TEXT("..\\Sounds");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UTX"), GLastDir[eLASTDIR_UTX], GUEDIni))		GLastDir[eLASTDIR_UTX] = TEXT("..\\Textures");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UNR"), GLastDir[eLASTDIR_UNR], GUEDIni))		GLastDir[eLASTDIR_UNR] = TEXT("..\\Maps");
+                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UMX"), GLastDir[eLASTDIR_UMX], GUEDIni)) GLastDir[eLASTDIR_UMX] = TEXT("..\\Music");
+                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UAX"), GLastDir[eLASTDIR_UAX], GUEDIni)) GLastDir[eLASTDIR_UAX] = TEXT("..\\Sounds");
+                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UTX"), GLastDir[eLASTDIR_UTX], GUEDIni)) GLastDir[eLASTDIR_UTX] = TEXT("..\\Textures");
+                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UNR"), GLastDir[eLASTDIR_UNR], GUEDIni)) GLastDir[eLASTDIR_UNR] = TEXT("..\\Maps");
 
-                    if( !GConfig->GetString( TEXT("URL"), TEXT("MapExt"), GMapExt, SYSTEM_INI ) )		GMapExt = TEXT("unr");
-                    GEditor->Exec( *(FString::Printf(TEXT("MODE MAPEXT=%ls"), *GMapExt ) ) );
+                    if (!GConfig->GetString(TEXT("URL"), TEXT("MapExt"), GMapExt, SYSTEM_INI)) GMapExt = TEXT("unr");
+                    GEditor->Exec(*(FString::Printf(TEXT("MODE MAPEXT=%ls"), *GMapExt)));
                 }
 
                 // Init input.
@@ -259,8 +268,7 @@ void UnrealGlue::Boot(int argc, char **argv) {
                 return;
 
             }
-            catch (...)
-            {
+            catch (...) {
                 // Chained abort.  Do cleanup.
                 Error.HandleError();
             }
@@ -268,54 +276,59 @@ void UnrealGlue::Boot(int argc, char **argv) {
     unguard;
 }
 
+/**
+ * Initialize and create the editor engine object.
+ * @return UEngine
+ */
 UEngine *UnrealGlue::InitEngine() {
-    guard(InitEngine);
+    guard(InitEngine) ;
             DOUBLE LoadTime = appSecondsNew();
 
             // Set exec hook.
             GExec = nullptr;
 
             // Update first-run.
-            INT FirstRun=0;
-            if (FirstRun<ENGINE_VERSION)
+            INT FirstRun = 0;
+            if (FirstRun < ENGINE_VERSION)
                 FirstRun = ENGINE_VERSION;
-            GConfig->SetInt( TEXT("FirstRun"), TEXT("FirstRun"), FirstRun );
+            GConfig->SetInt(TEXT("FirstRun"), TEXT("FirstRun"), FirstRun);
 
             //FixIni();  // check for legacy and Windows-specific INI entries...
 
             // Create the global engine object.
-            UClass* EngineClass;
-            if( !GIsEditor )
-            {
+            UClass *EngineClass;
+            if (!GIsEditor) {
                 // Create game engine.
-                EngineClass = UObject::StaticLoadClass( UGameEngine::StaticClass(), nullptr, TEXT("ini:Engine.Engine.GameEngine"), nullptr, LOAD_NoFail, nullptr );
-            }
-            else
-            {
+                EngineClass = UObject::StaticLoadClass(UGameEngine::StaticClass(), nullptr, TEXT("ini:Engine.Engine.GameEngine"), nullptr, LOAD_NoFail, nullptr);
+            } else {
                 // Editor.
-                EngineClass = UObject::StaticLoadClass( UEngine::StaticClass(), nullptr, TEXT("ini:Engine.Engine.EditorEngine"), nullptr, LOAD_NoFail, nullptr );
+                EngineClass = UObject::StaticLoadClass(UEngine::StaticClass(), nullptr, TEXT("ini:Engine.Engine.EditorEngine"), nullptr, LOAD_NoFail, nullptr);
             }
 
-            UEngine* Engine = ConstructObject<UEngine>( EngineClass );
+            UEngine *Engine = ConstructObject<UEngine>(EngineClass);
             Engine->Init();
 
-            debugf( TEXT("Startup time: %f seconds."), appSecondsNew()-LoadTime );
+            debugf(TEXT("Startup time: %f seconds."), appSecondsNew() - LoadTime);
 
             return Engine;
     unguard;
 }
 
-struct MainLoopArgs
-{
-    DOUBLE OldTime = 0.0;
-    DOUBLE SecondStartTime = 0.0;
-    INT TickCount = 0;
-    UEngine *Engine = nullptr;
-    bool Init = false;
+struct MainLoopArgs {
+    DOUBLE  OldTime         = 0.0;
+    DOUBLE  SecondStartTime = 0.0;
+    INT     TickCount       = 0;
+    UEngine *Engine         = nullptr;
+    bool    Init            = false;
 };
 
+/**
+ * Unreal Glue Event Loop
+ * Let the engine have some tick time.
+ * @return
+ */
 bool UnrealGlue::Loop() {
-    guard(MainLoop);
+    guard(MainLoop) ;
             check(GEditor);
 
             // Loop while running.
@@ -326,48 +339,45 @@ bool UnrealGlue::Loop() {
                 args->SecondStartTime = args->OldTime;
                 args->TickCount       = 0;
                 args->Engine          = GEditor;
-                args->Init = true;
+                args->Init            = true;
             }
 
-            if ( !GIsRunning || GIsRequestingExit )
-            {
+            if (!GIsRunning || GIsRequestingExit) {
                 GIsRunning = 0;
                 return false;
             }
 
-            try
-            {
-                DOUBLE &OldTime = args->OldTime;
-                DOUBLE &SecondStartTime = args->SecondStartTime;
-                INT &TickCount = args->TickCount;
-                UEngine *Engine = args->Engine;
+            try {
+                DOUBLE  &OldTime         = args->OldTime;
+                DOUBLE  &SecondStartTime = args->SecondStartTime;
+                INT     &TickCount       = args->TickCount;
+                UEngine *Engine          = args->Engine;
 
                 // Update the world.
-                guard(UpdateWorld);
+                guard(UpdateWorld) ;
                         // If we have no viewports we have no actors. Don't tick yet because someone might be expecting an actor!
                         if (m_pViewports.empty()) {
                             return true;
                         }
 
-                        DOUBLE NewTime = appSecondsNew();
+                        DOUBLE NewTime   = appSecondsNew();
                         FLOAT  DeltaTime = NewTime - OldTime;
-                        Engine->Tick( DeltaTime );
+                        Engine->Tick(DeltaTime);
 
-                        if( GWindowManager ) {
+                        if (GWindowManager) {
                             GWindowManager->Tick(DeltaTime);
                         }
 
                         OldTime = NewTime;
                         TickCount++;
-                        if( OldTime > SecondStartTime + 1 ) {
+                        if (OldTime > SecondStartTime + 1) {
                             Engine->CurrentTickRate = (FLOAT) TickCount / (OldTime - SecondStartTime);
                             SecondStartTime = OldTime;
                             TickCount       = 0;
                         }
                 unguard;
             }
-            catch (...)
-            {
+            catch (...) {
                 Error.HandleError();
                 //raise(SIGUSR1);
             }
@@ -376,7 +386,15 @@ bool UnrealGlue::Loop() {
     unguard;
 }
 
-UViewport *UnrealGlue::CreateViewport(const wchar_t*Name, int RenMap, int Flags) {
+/**
+ * Create Viewport
+ * Spawns a view actor, and creates a editor viewport
+ * @param Name
+ * @param RenMap
+ * @param Flags
+ * @return
+ */
+UViewport *UnrealGlue::CreateViewport(const wchar_t *Name, int RenMap, int Flags) {
     auto pViewport = GEditor->Client->NewViewport(Name);
     check(pViewport);
 
@@ -387,11 +405,11 @@ UViewport *UnrealGlue::CreateViewport(const wchar_t*Name, int RenMap, int Flags)
     check(pViewport->Actor);
 
     pViewport->Actor->ShowFlags = Flags;
-    pViewport->Actor->RendMap	= RenMap;
-    pViewport->Group			= NAME_Editor;
-    pViewport->MiscRes			= nullptr;
-    pViewport->Actor->Misc1		= 0;
-    pViewport->Actor->Misc2		= 0;
+    pViewport->Actor->RendMap   = RenMap;
+    pViewport->Group            = NAME_Editor;
+    pViewport->MiscRes          = nullptr;
+    pViewport->Actor->Misc1     = 0;
+    pViewport->Actor->Misc2     = 0;
 
     // SDL doesn't even use parent window
     // And we only have OpenGLDrv right now
@@ -399,8 +417,8 @@ UViewport *UnrealGlue::CreateViewport(const wchar_t*Name, int RenMap, int Flags)
 
     m_pViewports.push_back(pViewport);
 
-    auto pSDLWindow = (SDL_Window*)pViewport->GetWindow();
-    auto pWndID = Helpers::GetWindowHandle(pSDLWindow);
+    auto pSDLWindow = (SDL_Window *) pViewport->GetWindow();
+    auto pWndID     = Helpers::GetWindowHandle(pSDLWindow);
     m_pWndIDs.push_back(pWndID);
 
     std::map<ERenderType, Helpers::ViewportModes> map = {
@@ -420,20 +438,29 @@ UViewport *UnrealGlue::CreateViewport(const wchar_t*Name, int RenMap, int Flags)
         {REN_MAX,        Helpers::ViewportModes::Ignore}
     };
 
-    m_nViewportModes.push_back(map.at((ERenderType)RenMap));
+    m_nViewportModes.push_back(map.at((ERenderType) RenMap));
 
     return pViewport;
 }
 
+/**
+ * Before Map Load
+ * Handles some viewport flag fixes before a map is loaded
+ */
 void UnrealGlue::BeforeMapLoad() {
     m_vViewportFlagsBeforeMapLoad.clear();
 
     // Instead of clearing viewports, let's just remove SHOW_Brush
-    for(auto pViewport : m_pViewports) {
+    for (auto pViewport: m_pViewports) {
         m_vViewportFlagsBeforeMapLoad.push_back(pViewport->Actor->ShowFlags);
         pViewport->Actor->ShowFlags = 0;
     }
 }
+
+/**
+ * After Map Load
+ * Initializes our builder brushes, and reassigns any view filters.
+ */
 void UnrealGlue::AfterMapLoad() {
     if (m_pViewports.empty() || m_vViewportFlagsBeforeMapLoad.empty()) {
         return;
@@ -442,8 +469,8 @@ void UnrealGlue::AfterMapLoad() {
     // We're probably (poorly) calling this to fixup any issues with new/load map.
     InitBrushBuilders();
 
-    int i = 0;
-    for(auto pViewport : m_pViewports) {
+    int       i = 0;
+    for (auto pViewport: m_pViewports) {
         if (!m_vViewportFlagsBeforeMapLoad.at(i)) {
             pViewport->Actor->ShowFlags = s_DefaultViewportFlags;
         } else {
@@ -454,6 +481,10 @@ void UnrealGlue::AfterMapLoad() {
 
 }
 
+/**
+ * Make Viewports
+ * Generate our favourite four guys!
+ */
 void UnrealGlue::MakeViewports() {
     InitBrushBuilders();
 
@@ -463,6 +494,10 @@ void UnrealGlue::MakeViewports() {
     CreateViewport(TEXT("Standard4V"), REN_OrthYZ, s_DefaultViewportFlags);
 }
 
+/**
+ * Init Brush Builders
+ * Queries the engine for the types of brush builders available, and makes 'em.
+ */
 void UnrealGlue::InitBrushBuilders() {
     GEditor->UpdateBrushBuilders();
 
@@ -472,7 +507,7 @@ void UnrealGlue::InitBrushBuilders() {
         auto pBuilderBrush = GEditor->Level->Brush();
 
         if (pBuilderBrush->Brush->Polys
-        && pBuilderBrush->Brush->Polys->Element.Num() > 0) {
+            && pBuilderBrush->Brush->Polys->Element.Num() > 0) {
             return;
         }
     }
@@ -482,9 +517,9 @@ void UnrealGlue::InitBrushBuilders() {
     if (aBrushBuilders.Num() > 0) {
         // I think we need IsScriptable to be flipped in order for this to work.
         UBOOL GIsSavedScriptableSaved = 1;
-        Exchange(GIsScriptable,GIsSavedScriptableSaved);
+        Exchange(GIsScriptable, GIsSavedScriptableSaved);
         aBrushBuilders(0)->eventBuild();
-        Exchange(GIsScriptable,GIsSavedScriptableSaved);
+        Exchange(GIsScriptable, GIsSavedScriptableSaved);
     } else {
         appErrorf(TEXT("No builder brushes were found."));
     }

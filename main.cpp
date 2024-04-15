@@ -43,11 +43,9 @@ int main(int argc, char *argv[]) {
     int i = 0;
     for (auto pWinID : g_pUnreal->m_pWndIDs) {
         auto pWindow = QWindow::fromWinId((WId)pWinID);
-        auto flags = pWindow->flags();
         QWidget *widget = QWidget::createWindowContainer(pWindow);
         widget->setFocusPolicy(Qt::NoFocus);
         pMainWindow->SetViewport(widget, (WId)pWinID, g_pUnreal->m_nViewportModes.at(i));
-
         i++;
     }
 
@@ -56,11 +54,16 @@ int main(int argc, char *argv[]) {
 #ifdef COMPILE_WITH_QT
     pMainWindow->show();
 #endif
+
+    /*
+     * We need to handle two different event loops here!
+     */
     while (true) {
 #ifdef COMPILE_WITH_QT
-        // Run QT
+        // QT loop
         qApp->processEvents();
         if (!pMainWindow->isVisible()) {
+            delete g_pUnreal;
             break;
         }
 #endif
@@ -75,5 +78,5 @@ int main(int argc, char *argv[]) {
     qApp->exit();
 #endif
 
-    return 0;//QApplication::exec();
+    return 0;
 }

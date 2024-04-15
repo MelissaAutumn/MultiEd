@@ -8,37 +8,43 @@
 
 using namespace Components;
 
-void MultiEdWindow::LoadAndSetRandomSplash(QMainWindow *pViewport) {
-    auto splashes = QStringList();
-    splashes.push_back("./MultiEd/splash/UnrealTournamentLogo.bmp");
-    splashes.push_back("./MultiEd/splash/Splash0.bmp");
-    splashes.push_back("./MultiEd/splash/Splash1.bmp");
-    splashes.push_back("./MultiEd/splash/Splash2.bmp");
-    splashes.push_back("./MultiEd/splash/Splash3.bmp");
-    splashes.push_back("./MultiEd/splash/Splash4.bmp");
 
-    srand(time(nullptr));
-    auto index = 0 + rand() % (splashes.count() - 1);
+MultiEdWindow::~MultiEdWindow() {
+    delete m_pDockWidget;
+    delete m_pOrderedSideBar;
+    delete m_pFileMenu;
+    delete m_pEditMenu;
+    delete m_pViewMenu;
+    delete m_pBrushMenu;
+    delete m_pActorMenu;
+    delete m_pBuildMenu;
+    delete m_pToolsMenu;
+    delete m_pHelpMenu;
+    delete m_pToolbar;
+    delete m_pQuadView;
 
-    auto image      = QPixmap(splashes[index]);
-    auto imageLabel = new QLabel();
-    // Lol no aspect ratio preserving scale.
-    imageLabel->setScaledContents(true);
-    imageLabel->setAlignment(Qt::AlignCenter);
-    imageLabel->setPixmap(image);
-
-
-    pViewport->setCentralWidget(imageLabel);
+    // Clean up any viewports
+    for(auto viewport : m_viewports) {
+        delete viewport;
+    }
 }
 
-void MultiEdWindow::SetViewport(QWidget* pWidget, WId nWindowID, Helpers::ViewportModes nMode) {
 
+/**
+ * Set a window to a given viewport mode and parent it to a widget
+ * @param pWidget - Widget to parent the viewport to
+ * @param nWindowID - Foreign Window Handler
+ * @param nMode - Viewport mode
+ */
+void MultiEdWindow::SetViewport(QWidget *pWidget, WId nWindowID, Helpers::ViewportModes nMode) {
     auto pViewportWidget = new Components::Viewport(this, nWindowID, nMode);
     pViewportWidget->Init();
 
     m_pViewport = pViewportWidget->GetWidget();
     m_pViewport->setCentralWidget(pWidget);
     m_pQuadView->AddWidget(pViewportWidget->GetWidget());
+
+    m_viewports.push_back(pViewportWidget);
 }
 
 void MultiEdWindow::Init() {
@@ -47,57 +53,57 @@ void MultiEdWindow::Init() {
 
 
     // Temp until I make a button for it :)
-    auto pref = new Components::Preferences();
+    //auto pref = new Components::Preferences();
 
 
     // Side Bar
 
     // Create a dock, and set some zones / features
-    auto pDock = new QDockWidget();
-    pDock->setFeatures(QDockWidget::DockWidgetMovable);
-    pDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    m_pDockWidget = new QDockWidget();
+    m_pDockWidget->setFeatures(QDockWidget::DockWidgetMovable);
+    m_pDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     // Create our sidebar
-    auto pOrderedSideBar = new Components::OrderedSideBar();
-    pOrderedSideBar->Init();
+    m_pOrderedSideBar = new Components::OrderedSideBar();
+    m_pOrderedSideBar->Init();
 
     // Add our sidebar / dock
-    pDock->setWidget(pOrderedSideBar->GetWidget());
-    pDock->setMaximumWidth(pOrderedSideBar->GetWidget()->sizeHint().width());
+    m_pDockWidget->setWidget(m_pOrderedSideBar->GetWidget());
+    m_pDockWidget->setMaximumWidth(m_pOrderedSideBar->GetWidget()->sizeHint().width());
 
-    this->addDockWidget(Qt::LeftDockWidgetArea, pDock);
+    this->addDockWidget(Qt::LeftDockWidgetArea, m_pDockWidget);
 
-    auto pFileMenu = new Components::FileMenu(this);
-    pFileMenu->Init();
+    m_pFileMenu = new Components::FileMenu(this);
+    m_pFileMenu->Init();
 
-    auto pEditMenu = new Components::EditMenu(this);
-    pEditMenu->Init();
-
-    // Not fully implemented
-    auto pViewMenu = new Components::ViewMenu(this);
-    pViewMenu->Init();
+    m_pEditMenu = new Components::EditMenu(this);
+    m_pEditMenu->Init();
 
     // Not fully implemented
-    auto pBrushMenu = new Components::BrushMenu(this);
-    pBrushMenu->Init();
+    m_pViewMenu = new Components::ViewMenu(this);
+    m_pViewMenu->Init();
 
     // Not fully implemented
-    auto pActorMenu = new Components::ActorMenu(this);
-    pActorMenu->Init();
+    m_pBrushMenu = new Components::BrushMenu(this);
+    m_pBrushMenu->Init();
 
     // Not fully implemented
-    auto pBuildMenu = new Components::BuildMenu(this);
-    pBuildMenu->Init();
+    m_pActorMenu = new Components::ActorMenu(this);
+    m_pActorMenu->Init();
 
     // Not fully implemented
-    auto pToolsMenu = new Components::ToolsMenu(this);
-    pToolsMenu->Init();
+    m_pBuildMenu = new Components::BuildMenu(this);
+    m_pBuildMenu->Init();
 
     // Not fully implemented
-    auto pHelpMenu = new Components::HelpMenu(this);
-    pHelpMenu->Init();
+    m_pToolsMenu = new Components::ToolsMenu(this);
+    m_pToolsMenu->Init();
 
-    auto pToolbar = new Components::ToolBar(this);
-    pToolbar->Init();
+    // Not fully implemented
+    m_pHelpMenu = new Components::HelpMenu(this);
+    m_pHelpMenu->Init();
+
+    m_pToolbar = new Components::ToolBar(this);
+    m_pToolbar->Init();
 
     // Viewports!
     m_pQuadView = new ViewportSplitterContainer(this);
@@ -108,27 +114,3 @@ void MultiEdWindow::Init() {
     this->show();
 
 }
-
-void MultiEdWindow::resizeEvent(QResizeEvent * pResize) {
-#if 0
-    if (!m_pSDLWindow) { return; }
-    SDL_SetWindowSize(m_pSDLWindow, m_pViewport->size().width(), m_pViewport->size().height()-42);
-    SDL_RaiseWindow(m_pSDLWindow);
-#endif
-
-}
-
-void MultiEdWindow::moveEvent(QMoveEvent *event) {
-#if 0
-    if (!m_pSDLWindow) { return; }
-    auto pos = this->pos() + m_pViewport->pos();
-
-    pos.setY(pos.y() + 72);
-
-    SDL_SetWindowPosition(m_pSDLWindow, pos.x(), pos.y());
-    SDL_SetWindowSize(m_pSDLWindow, m_pViewport->size().width(), m_pViewport->size().height()-42);
-    SDL_RaiseWindow(m_pSDLWindow);
-#endif
-}
-
-
