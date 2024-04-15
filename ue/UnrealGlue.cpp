@@ -56,6 +56,9 @@ FFeedbackContextSDL Warn;
 
 FFileManagerLinux FileManager;
 
+// Needed for FConfigCacheIni
+BOOL GRecoveryMode = 0;
+
 // Config.
 #include "FConfigCacheIni.h"
 
