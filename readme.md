@@ -1,5 +1,7 @@
 # MultiEd
 
+[![Build MultiEd](https://github.com/MelissaAutumn/MultiEd/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/MelissaAutumn/MultiEd/actions/workflows/build.yml)
+
 An QT6 based open source frontend for the OldUnreal Unreal Engine 1 games. 
 
 ![A screenshot of MultiEd with the Intro level loaded up.](docs/cover.png "MultiEd in action")
