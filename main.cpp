@@ -21,6 +21,15 @@ void sigHandler(int s)
 }
 
 int main(int argc, char *argv[]) {
+
+#ifdef __linux__
+    // Force XWayland/X11 mode if nothing is provided, until we have a better solution that works on wayland.
+    if (!getenv("QT_QPA_PLATFORM")) {
+        char x11[] = "QT_QPA_PLATFORM=xcb";
+        putenv(x11);
+    }
+#endif
+
 #ifdef COMPILE_WITH_QT
     QApplication a(argc, argv);
 #endif
