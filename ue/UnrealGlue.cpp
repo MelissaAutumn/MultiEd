@@ -502,8 +502,6 @@ void UnrealGlue::MakeViewports() {
  * Queries the engine for the types of brush builders available, and makes 'em.
  */
 void UnrealGlue::InitBrushBuilders() {
-    GEditor->UpdateBrushBuilders();
-
     // Is level loaded?
     // Check to see if we already have a valid builder brush!
     if (GEditor->Level && GEditor->Level->Brush()) {

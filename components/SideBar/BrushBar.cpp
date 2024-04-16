@@ -17,8 +17,7 @@ void Components::BrushBar::Init() {
     auto nCurrentColumn = 0;
     for (int i = 0; i < aBuilders.Num(); i++) {
         UBrushBuilder* pBrush = aBuilders(i);
-        auto pOurBrush = ConstructObject<UBrushBuilder>(pBrush->GetClass());
-        m_Brushes.push_back(pOurBrush);
+        m_Brushes.push_back(pBrush);
 
         QString sBitmapName = QString::fromWCharArray(*pBrush->BitmapFilename);
 
@@ -36,7 +35,7 @@ void Components::BrushBar::Init() {
         QString sTooltip = QString::fromWCharArray(*pBrush->ToolTip);
 
         auto icon = QIcon("./editorres/" + sBitmapName);
-        auto pButton = new SidebarButton<UBrushBuilder*>(sTooltip, icon, pOurBrush, false,
+        auto pButton = new SidebarButton<UBrushBuilder*>(sTooltip, icon, pBrush, false,
                                                          [](UBrushBuilder* pBrush) { g_pEditorAPI->BuildBrush(pBrush); },
                                                          [](UBrushBuilder* pBrush) {
             new BrushProperties(pBrush);
