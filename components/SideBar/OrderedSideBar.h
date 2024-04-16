@@ -28,7 +28,7 @@ namespace Components {
         void Init() override {
             m_pWidget = new QWidget;
             auto* pVBar = new QVBoxLayout(m_pWidget);
-
+            pVBar->setAlignment(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter);
 
             // Create and init our subcomponents
             auto* pModeBar = new Components::ModeBar(nullptr);

@@ -104,9 +104,8 @@ namespace Components {
 
             m_pDropdownButton = new QPushButton("Hello World :)");
             m_pDropdownButton->setFlat(true);
-            m_pDropdownButton->setFixedWidth(128);
             // lol css
-            m_pDropdownButton->setStyleSheet("text-align: left; margin-left: 2px;");
+            m_pDropdownButton->setStyleSheet("text-align: left; margin-left: 2px; margin-right: 16px; min-width: 128px;");
             Components::Viewport::connect(m_pDropdownButton, &QPushButton::clicked, [=]() { m_pDropdownMenu->exec(m_pDropdownButton->mapToGlobal(m_pDropdownButton->pos() ) + QPoint(-10, 30)); });
 
             pToolbar->addWidget(m_pDropdownButton);
