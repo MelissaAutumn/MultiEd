@@ -46,7 +46,7 @@ jobs:
       - name: Run CMake
         run: |
           cd libs/OldUnrealSDK
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B ./cmake-build-release-clang
+          cmake -DCMAKE_INSTALL_PREFIX="./System64" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B ./cmake-build-release-clang
           cmake --build ./cmake-build-release-clang --target SDLDrv
           cmake --build ./cmake-build-release-clang --target OpenGLDrv
 
