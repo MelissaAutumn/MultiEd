@@ -1,0 +1,89 @@
+# This workflow will install backend's requirements and run tests
+
+name: Build Patched Libs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: sudo apt update && sudo apt install qt6-base-dev libsdl2-dev libxmp-dev -y
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install requests
+
+      - name: Run Setup Build Script
+        run: python .github/workflow_scripts/setup_build.py linux
+
+      - run: ls -l libs/OldUnrealSDK
+
+      - name: Apply patches
+        run: |
+          cd libs/OldUnrealSDK
+          git init
+          git apply ../../patches/fix-opengl.patch
+          git apply ../../patches/allow-per-viewport-input-sdldrv.patch
+
+      - name: Run CMake
+        run: |
+          cd libs/OldUnrealSDK
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B ./cmake-build-release-clang
+          cmake --build ./cmake-build-release-clang --target SDLDrv
+          cmake --build ./cmake-build-release-clang --target OpenGLDrv
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SDLDrv.so
+          path: libs/OldUnrealSDK/cmake-build-release-clang/SDLDrv.so
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenGLDrv.so
+          path: libs/OldUnrealSDK/cmake-build-release-clang/OpenGLDrv.so
+
+#  windows:
+#    runs-on: windows-latest
+#
+#    steps:
+#    - uses: actions/checkout@v4
+#
+#    - run: choco install qt6-base-dev
+#
+#    - name: Set up Python
+#      uses: actions/setup-python@v5
+#      with:
+#        python-version: '3.11'
+#        cache: 'pip'
+#
+#    - name: Install dependencies
+#      run: |
+#        python -m pip install --upgrade pip
+#        python -m pip install requests
+#
+#
+#    - name: Run Setup Build Script
+#      run: python .github/workflow_scripts/setup_build.py linux
+#
+#    - uses: actions/upload-artifact@v4
+#      with:
+#        name: windows-app
+#        path: dist/app
