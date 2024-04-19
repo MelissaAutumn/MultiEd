@@ -129,8 +129,11 @@ namespace Services {
         void ToggleViewportFlag(WId pViewportID, Helpers::ViewportShowFlags flag);
         Helpers::ViewportShowFlags GetViewportFlags(WId pViewportID);
 
+        bool DoesViewportHaveRightClick(WId pViewportID);
+
     private:
         std::map<WId, UViewport*> m_pCachedViewports;
+
         UViewport* FindViewport(WId pViewportID);
     };
 }

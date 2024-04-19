@@ -57,7 +57,8 @@ FFeedbackContextSDL Warn;
 FFileManagerLinux FileManager;
 
 // Needed for FConfigCacheIni
-BOOL GRecoveryMode = 0;
+[[maybe_unused]]
+BOOL GRecoveryMode = false;
 
 // Config.
 #include "FConfigCacheIni.h"
@@ -100,25 +101,20 @@ extern FString GMapExt;
 EDITOR_API FString GMapExt;
 #endif
 
-//class qtLogWindow;
 class LogWindow : public FOutputDevice {
 public:
     FOutputDevice           *AuxOut;
     Components::qtLogWindow *LogWin;
-    //wxLogWindow* LogWin;
-    //FramePos* MyFramePos;
     UBOOL ShowLog;
 
     LogWindow()
         : AuxOut(nullptr), LogWin(nullptr)
-        //, MyFramePos( NULL )
         , ShowLog(FALSE) {}
 
     void Serialize(const TCHAR *V, EName Event) {
         guard(LogWindow::Serialize) ;
                 if (LogWin) {
                     LogWin->Log(V);
-                    //wxLogMessage(wxT("%s"), V);
                 }
                 if (AuxOut) {
                     AuxOut->Serialize(V, Event);
@@ -415,7 +411,6 @@ bool UnrealGlue::Loop() {
 UViewport *UnrealGlue::CreateViewport(const wchar_t *Name, int RenMap, int Flags) {
     auto pViewport = GEditor->Client->NewViewport(Name);
     check(pViewport);
-
 
     GEditor->Level->SpawnViewActor(pViewport);
     pViewport->Input->Init(pViewport);
