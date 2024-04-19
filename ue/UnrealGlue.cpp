@@ -219,14 +219,29 @@ void UnrealGlue::Boot(int argc, char **argv) {
                     GLog = &g_LogWindow;
                 }
 
-                FString sUseGammaRampVal;
-                GConfig->GetString(TEXT("OpenGLDrv.OpenGLRenderDevice"), TEXT("ColorCorrectionMode"), sUseGammaRampVal, TEXT("MultiEd.ini"));
+                // Check various config settings
+                {
+                    FString sMultiEdConfigFile = TEXT("MultiEd.ini");
+                    FString sViewportManager;
+                    GConfig->GetString(TEXT("Engine.Engine"), TEXT("ViewportManager"), sViewportManager, *sMultiEdConfigFile);
 
-                // FIXME: Hack because other ColourCorrectionMode's in OpenGLDrv are broken for othro views.
-                if (sUseGammaRampVal != TEXT("UseGammaRamp")) {
-                    // Force GammaRamp
-                    GConfig->SetString(TEXT("OpenGLDrv.OpenGLRenderDevice"), TEXT("ColorCorrectionMode"), TEXT("UseGammaRamp"), TEXT("MultiEd.ini"));
-                    warnf(TEXT("OpenGLDrv Setting Conflict With MultiEd: Due to a bug work-around with OpenGLDrv. ColorCorrectionMode has been set to UseGammaRamp. However this will only apply on the next load. Please re-launch MultiEd for this to take effect."));
+                    if (sViewportManager == TEXT("WinDrv.WindowsClient")) {
+                        GConfig->SetString(TEXT("Engine.Engine"), TEXT("ViewportManager"), TEXT("SDLDrv.SDLClient"), *sMultiEdConfigFile);
+                        GConfig->SetString(TEXT("SDLDrv.SDLClient"), TEXT("StartupFullscreen"), TEXT("False"), *sMultiEdConfigFile);
+                    }
+
+                    FString sUseGammaRampVal;
+                    GConfig->GetString(TEXT("OpenGLDrv.OpenGLRenderDevice"), TEXT("ColorCorrectionMode"),
+                                       sUseGammaRampVal, *sMultiEdConfigFile);
+
+                    // FIXME: Hack because other ColourCorrectionMode's in OpenGLDrv are broken for othro views.
+                    if (sUseGammaRampVal != TEXT("UseGammaRamp")) {
+                        // Force GammaRamp
+                        GConfig->SetString(TEXT("OpenGLDrv.OpenGLRenderDevice"), TEXT("ColorCorrectionMode"),
+                                           TEXT("UseGammaRamp"), TEXT("MultiEd.ini"));
+                        warnf(TEXT("OpenGLDrv Setting Conflict With MultiEd: Due to a bug work-around with OpenGLDrv. ColorCorrectionMode has been set to UseGammaRamp. However this will only apply on the next load. Please re-launch MultiEd for this to take effect."));
+                    }
+
                 }
 
                 debugf(NAME_Init, TEXT("Booting MultiEd's Unreal integration"));
