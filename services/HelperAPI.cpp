@@ -17,7 +17,7 @@ void Services::HelperAPI::LoadMap() {
                 nullptr,
                 "Load Map",
                 "../Maps",
-                "Map Files (*.unr)");
+                "Map Files (*.unr)", nullptr, QFileDialog::DontUseNativeDialog);
 
         if(file.isEmpty()) {
             return;
