@@ -287,8 +287,14 @@ namespace Components {
 
         void Update() {
             if (g_pEditorAPI->DoesViewportHaveRightClick(this->m_nViewportWindowID)) {
-                QMenu menu("This is a test yo");
-                menu.addAction("Hello world :^)");
+                QMenu menu("PopUp Menu");
+                menu.addAction("Properties");
+                menu.addSeparator();
+                menu.addAction("Add light here", [=] () {
+                    g_pEditorAPI->AddLightHere();
+                });
+                menu.addSeparator();
+                menu.addAction("Etc...");
                 menu.exec(QCursor::pos());
             }
         }

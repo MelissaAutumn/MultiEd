@@ -171,6 +171,11 @@ int Services::EditorAPI::GetCameraSpeed() {
     return 1;
 }
 
+void Services::EditorAPI::AddLightHere() {
+    this->ExecCommand("ACTOR ADD CLASS=ENGINE.LIGHT");
+    this->ExecCommand("POLY SELECT NONE");
+}
+
 TArray<UBrushBuilder *> Services::EditorAPI::GetBrushBuilders() {
     API_IS_AVAILABLE_VAL(TArray<UBrushBuilder*>());
 

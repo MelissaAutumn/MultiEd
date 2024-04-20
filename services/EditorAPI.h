@@ -106,6 +106,10 @@ namespace Services {
 
         int GetCameraSpeed();
 
+        // Actor Commands
+
+        void AddLightHere();
+
         // Brushes
 
         TArray<UBrushBuilder *> GetBrushBuilders();
@@ -116,6 +120,7 @@ namespace Services {
         void SaveMap() {
 
         }
+
 
         /*
          * Viewport
