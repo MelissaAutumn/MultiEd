@@ -62,6 +62,7 @@ namespace Components {
 
         void Init();
         void SetViewport(QWidget* pWidget, WId nWindowID, Helpers::ViewportModes nMode);
+        void Update();
 
         SDL_Window* m_pSDLWindow{};
     };

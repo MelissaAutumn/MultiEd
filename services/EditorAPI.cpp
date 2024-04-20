@@ -14,6 +14,7 @@
 #include "EditorPrivate.h"
 
 #include "../ue/UnrealGlue.h"
+#include <SDLDrv.h>
 extern UnrealGlue* g_pUnreal;
 
 #define API_IS_AVAILABLE if (!GEditor) { return; }
@@ -280,6 +281,19 @@ Helpers::ViewportShowFlags Services::EditorAPI::GetViewportFlags(WId pViewportID
 
             return (Helpers::ViewportShowFlags)pViewport->Actor->ShowFlags;
     unguard
+}
+
+bool Services::EditorAPI::DoesViewportHaveRightClick(WId pViewportID) {
+    const auto viewport = this->FindViewport(pViewportID);
+
+    if (auto sdlViewport = dynamic_cast<USDLViewport *>(viewport)) {
+        EInputAction action = IST_None;
+        // Retrieve the last right click state, and if it's release then we have a right click!
+        sdlViewport->GetLastInputState(IK_RightMouse, &action, true);
+        return action == IST_Release;
+    }
+
+    return false;
 }
 
 void Services::EditorAPI::SetMode(Helpers::EditorModes mode) {

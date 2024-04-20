@@ -285,6 +285,13 @@ namespace Components {
             m_pWidget->addToolBar(pToolbar);
         };
 
+        void Update() {
+            if (g_pEditorAPI->DoesViewportHaveRightClick(this->m_nViewportWindowID)) {
+                QMenu menu("This is a test yo");
+                menu.addAction("Hello world :^)");
+                menu.exec(QCursor::pos());
+            }
+        }
 
         QMainWindow *GetWidget() { return m_pWidget; }
     };

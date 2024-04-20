@@ -8,6 +8,8 @@
 
 using namespace Components;
 
+// Timer resolution for updates
+constexpr int updateTimerMs = 100;
 
 MultiEdWindow::~MultiEdWindow() {
     delete m_pDockWidget;
@@ -47,6 +49,12 @@ void MultiEdWindow::SetViewport(QWidget *pWidget, WId nWindowID, Helpers::Viewpo
     m_viewports.push_back(pViewportWidget);
 }
 
+void MultiEdWindow::Update() {
+    for (auto viewport : m_viewports) {
+        viewport->Update();
+    }
+}
+
 void MultiEdWindow::Init() {
     this->setWindowTitle("MultiEd");
     this->resize(1280, 720);
@@ -54,6 +62,11 @@ void MultiEdWindow::Init() {
 
     // Temp until I make a button for it :)
     //auto pref = new Components::Preferences();
+
+    // Update function timer
+    auto timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, QOverload<>::of(&MultiEdWindow::Update));
+    timer->start(updateTimerMs);
 
 
     // Side Bar
