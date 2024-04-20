@@ -10,8 +10,8 @@ void ToolBar::Init() {
     pToolbar->addAction(CreateAction("UnrealEd_414.bmp", "Open Map", [=]() { g_pHelperAPI->LoadMap(); }));
     pToolbar->addAction(CreateAction("UnrealEd_415.bmp", "Save Map", [=]() { this->NotImplemented(); }));
     pToolbar->addSeparator();
-    pToolbar->addAction(CreateAction("UnrealEd_430.bmp", "Undo", [=]() { this->NotImplemented(); }));
-    pToolbar->addAction(CreateAction("UnrealEd_431.bmp", "Redo", [=]() { this->NotImplemented(); }));
+    pToolbar->addAction(CreateAction("UnrealEd_430.bmp", "Undo", [=]() { g_pEditorAPI->Undo(); }));
+    pToolbar->addAction(CreateAction("UnrealEd_431.bmp", "Redo", [=]() { g_pEditorAPI->Redo(); }));
     pToolbar->addSeparator();
     pToolbar->addAction(CreateAction("UnrealEd_416.bmp", "Search for Actors", [=]() { this->NotImplemented(); }));
     pToolbar->addSeparator();
@@ -28,14 +28,14 @@ void ToolBar::Init() {
     pToolbar->addAction(CreateAction("UnrealEd_423.bmp", "Actor Properties", [=]() { this->NotImplemented(); }));
     pToolbar->addAction(CreateAction("UnrealEd_424.bmp", "Surface Properties", [=]() { this->NotImplemented(); }));
     pToolbar->addSeparator();
-    pToolbar->addAction(CreateAction("UnrealEd_425.bmp", "Build Geometry", [=]() { this->NotImplemented(); }));
-    pToolbar->addAction(CreateAction("UnrealEd_426.bmp", "Build Lighting", [=]() { this->NotImplemented(); }));
-    pToolbar->addAction(CreateAction("UnrealEd_427.bmp", "Build Paths", [=]() { this->NotImplemented(); }));
+    pToolbar->addAction(CreateAction("UnrealEd_425.bmp", "Build Geometry", [=]() { g_pEditorAPI->BuildGeometry(); }));
+    pToolbar->addAction(CreateAction("UnrealEd_426.bmp", "Build Lighting", [=]() { g_pEditorAPI->BuildLighting(); }));
+    pToolbar->addAction(CreateAction("UnrealEd_427.bmp", "Build Paths", [=]() { g_pEditorAPI->BuildPaths(); }));
     pToolbar->addAction(CreateAction("UnrealEd_29764.bmp", "Build All (as per current settings)",
-                                     [=]() { this->NotImplemented(); }));
+                                     [=]() { g_pEditorAPI->BuildAll(); }));
     pToolbar->addAction(CreateAction("UnrealEd_428.bmp", "Build Options", [=]() { this->NotImplemented(); }));
     pToolbar->addSeparator();
-    pToolbar->addAction(CreateAction("UnrealEd_429.bmp", "Play Map!", [=]() { this->NotImplemented(); }));
+    pToolbar->addAction(CreateAction("UnrealEd_429.bmp", "Play Map!", [=]() { g_pEditorAPI->PlayMap(); }));
 
     m_pWindow->addToolBar(pToolbar);
 }

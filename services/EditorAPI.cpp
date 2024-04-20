@@ -9,6 +9,8 @@
 #include "EditorAPI.h"
 
 #include <qdatetime.h>
+#include <qdir.h>
+#include <qprocess.h>
 
 #include "../helpers/SDLHelper.h"
 
@@ -58,8 +60,10 @@ bool Services::EditorAPI::ExecCommand(const QString &sCommand) {
     API_IS_AVAILABLE_VAL(false);
 
     qDebug() << "[EditorAPI::ExecCommand] " + sCommand;
+    guard(ExecCommand);
     // This feels illegal
     return GEditor->Exec(sCommand.toStdWString().c_str());
+    unguard;
 }
 
 /*
@@ -164,6 +168,52 @@ void Services::EditorAPI::CameraAlign() {
     this->ExecCommand("CAMERA ALIGN");
 }
 
+void Services::EditorAPI::Undo() {
+    this->ExecCommand("TRANSACTION UNDO");
+}
+
+void Services::EditorAPI::Redo() {
+    this->ExecCommand("TRANSACTION REDO");
+}
+
+void Services::EditorAPI::BuildGeometry() {
+    this->ExecCommand(QString("MAP REBUILD VISIBLEONLY=%1").arg("0"));
+}
+
+void Services::EditorAPI::BuildLighting() {
+    this->ExecCommand(QString("LIGHT APPLY SELECTED=%1").arg("0"));
+    GEditor->Flush(1);
+}
+
+void Services::EditorAPI::BuildPaths() {
+    this->ExecCommand("PATHS DEFINE");
+}
+
+void Services::EditorAPI::BuildAll() {
+    // Args: (Based on default settings right now)
+    // 1. Optimal Build Quality
+    // 2. Optimize Geometry
+    // 3. Build Visibility Zones
+    // 4. Minimize Cuts vs Balance Tree
+    // 5. Ignore Portals vs Portals Cut All
+    this->ExecCommand(QString("BSP REBUILD %1 %2 %3 BALANCE=%4 PORTALBIAS=%5").arg("OPTIMAL", "OPTGEOM", "ZONES", "15", "7"));
+}
+
+void Services::EditorAPI::PlayMap() {
+    // Doesn't seem to work. Windows specific?
+    //this->ExecCommand("HOOK PLAYMAP");
+
+    if (this->SaveMap(L"../Maps/_multied_playmap.unr")) {
+        // Launch via qt
+        auto process = new QProcess();
+#ifdef __LINUX__
+        process->start("./ut-bin", {"_multied_playmap.unr"});
+#else
+        this->ExecCommand("HOOK PLAYMAP");
+#endif
+    }
+}
+
 int Services::EditorAPI::GetCameraSpeed() {
     API_IS_AVAILABLE_VAL(16);
 
@@ -218,6 +268,13 @@ void Services::EditorAPI::LoadMap(const TCHAR *sMap) {
         g_pUnreal->AfterMapLoad();
     unguard
 }
+
+bool Services::EditorAPI::SaveMap(const TCHAR *sMap) {
+    guard(SaveMap)
+    return GEditor->Exec(*(FString::Printf(TEXT("MAP SAVE FILE=\"%ls\""), sMap)));
+    unguard
+}
+
 
 void Services::EditorAPI::SetViewportMode(WId pViewportID, Helpers::ViewportModes mode) {
     guard(SetViewportMode)

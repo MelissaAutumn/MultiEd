@@ -110,6 +110,19 @@ namespace Services {
         void CameraSpeed(int nSpeed);
         void CameraAlign();
 
+        void Undo();
+        void Redo();
+
+        /*
+         * Build Commands
+         */
+        void BuildGeometry();
+        void BuildLighting();
+        void BuildPaths();
+        void BuildAll();
+        void PlayMap();
+
+
         int GetCameraSpeed();
 
         // Actor Commands
@@ -123,9 +136,8 @@ namespace Services {
 
         void NewMap(bool bAdditive = false);
         void LoadMap(const wchar_t* sMap);
-        void SaveMap() {
 
-        }
+        bool SaveMap(const wchar_t *sMap);
 
 
         /*
