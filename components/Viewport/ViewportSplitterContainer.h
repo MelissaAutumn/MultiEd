@@ -20,7 +20,7 @@ namespace Components {
             m_pVSplitter = nullptr;
         }
         void Init() override;
-        void AddWidget(QWidget* pWidget);
+        void AddWidget(QWidget* pWidget) const;
 
     private:
 
@@ -29,7 +29,7 @@ namespace Components {
         QSplitter* m_pVSplitter{};
 
     private slots:
-        void OnMove(ViewportSplitter* pSplitter, int pos, int index);
+        void OnMove(ViewportSplitter* pSplitter, int pos, int index) const;
 
     };
 }

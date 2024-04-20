@@ -27,23 +27,23 @@ namespace Components {
     private:
         QMainWindow *m_pWindow;
         QMainWindow *m_pWidget;
-        WId         m_nViewportWindowID;
+        WId m_nViewportWindowID;
 
-        QMenu* m_pDropdownMenu;
-        QPushButton* m_pDropdownButton;
+        QMenu *m_pDropdownMenu;
+        QPushButton *m_pDropdownButton;
 
         Helpers::ViewportModes m_nCurrentViewportMode;
-        std::map<QString, QAction*> m_mActionList;
+        std::map<QString, QAction *> m_mActionList;
 
-        ViewportButton<Helpers::ViewportShowFlags>* m_pRealtimeButton;
-        std::vector<ViewportButton<Helpers::ViewportModes>*> m_vViewportModeButtons;
-        std::vector<ViewportAction<Helpers::ViewportModes>*> m_vViewportModeActions;
-        std::vector<ViewportAction<Helpers::ViewportShowFlags>*> m_vViewportFlags;
-
+        ViewportButton<Helpers::ViewportShowFlags> *m_pRealtimeButton;
+        std::vector<ViewportButton<Helpers::ViewportModes> *> m_vViewportModeButtons;
+        std::vector<ViewportAction<Helpers::ViewportModes> *> m_vViewportModeActions;
+        std::vector<ViewportAction<Helpers::ViewportShowFlags> *> m_vViewportFlags;
 
     protected:
         template<typename ActionFunction>
-        void CreateAction(QMenu* pModeMenu, const QString& sText, const ActionFunction f, const QString& sShortcut = "") {
+        void CreateAction(QMenu *pModeMenu, const QString &sText, const ActionFunction f,
+                          const QString &sShortcut = "") {
             // Lol! This isn't great.
             // Instead of explicitly defining these, why not stuff them in a hashmap, keyed by name?
             auto pAction = new QAction(sText, m_pWindow);
@@ -63,28 +63,27 @@ namespace Components {
             g_pEditorAPI->SetViewportMode(this->m_nViewportWindowID, mode);
             m_pDropdownButton->setText(g_ViewportModeNameMap.at(mode));
 
-            for(auto pButton : m_vViewportModeButtons) {
+            for (auto pButton: m_vViewportModeButtons) {
                 pButton->UpdateState(mode);
             }
-            for(auto pAction : m_vViewportModeActions) {
+            for (auto pAction: m_vViewportModeActions) {
                 pAction->UpdateState(mode);
             }
-
-
         }
+
         void ChangeViewportFlag(Helpers::ViewportShowFlags flag) {
             g_pEditorAPI->ToggleViewportFlag(this->m_nViewportWindowID, flag);
 
             auto flags = g_pEditorAPI->GetViewportFlags(m_nViewportWindowID);
 
             m_pRealtimeButton->UpdateState(flags);
-            for(auto pAction : m_vViewportFlags) {
+            for (auto pAction: m_vViewportFlags) {
                 pAction->UpdateState(flags);
             }
         }
 
     public:
-        explicit Viewport(QMainWindow* pWindow, WId nViewportWindowID, Helpers::ViewportModes nCurrentMode) {
+        explicit Viewport(QMainWindow *pWindow, WId nViewportWindowID, Helpers::ViewportModes nCurrentMode) {
             m_pWindow = pWindow;
             m_nViewportWindowID = nViewportWindowID;
             m_nCurrentViewportMode = nCurrentMode;
@@ -105,8 +104,11 @@ namespace Components {
             m_pDropdownButton = new QPushButton("Hello World :)");
             m_pDropdownButton->setFlat(true);
             // lol css
-            m_pDropdownButton->setStyleSheet("text-align: left; margin-left: 2px; margin-right: 16px; min-width: 128px;");
-            Components::Viewport::connect(m_pDropdownButton, &QPushButton::clicked, [=]() { m_pDropdownMenu->exec(m_pDropdownButton->mapToGlobal(m_pDropdownButton->pos() ) + QPoint(-10, 30)); });
+            m_pDropdownButton->setStyleSheet(
+                "text-align: left; margin-left: 2px; margin-right: 16px; min-width: 128px;");
+            Components::Viewport::connect(m_pDropdownButton, &QPushButton::clicked, [=]() {
+                m_pDropdownMenu->exec(m_pDropdownButton->mapToGlobal(m_pDropdownButton->pos()) + QPoint(-10, 30));
+            });
 
             pToolbar->addWidget(m_pDropdownButton);
 
@@ -128,41 +130,41 @@ namespace Components {
 
             std::vector<ViewportModeButtonCreateData> ToolbarButtons = {
                 // We're cheating by putting the shortcut in the tooltip, it's actually set for the toolbar mode action!
-                { "Top", Helpers::ViewportModes::Top },
-                { "Front", Helpers::ViewportModes::Front },
-                { "Side", Helpers::ViewportModes::Side },
+                {"Top", Helpers::ViewportModes::Top},
+                {"Front", Helpers::ViewportModes::Front},
+                {"Side", Helpers::ViewportModes::Side},
 
-                { "Wireframe", Helpers::ViewportModes::Wireframe },
-                { "Texture Usage", Helpers::ViewportModes::TextureUsage },
-                { "BSP Cuts", Helpers::ViewportModes::BSPCuts },
-                { "Dynamic Lighting", Helpers::ViewportModes::DynamicLighting },
-                { "Textured", Helpers::ViewportModes::Textured },
-                { "Zones/Portals", Helpers::ViewportModes::ZonesNPortals },
+                {"Wireframe", Helpers::ViewportModes::Wireframe},
+                {"Texture Usage", Helpers::ViewportModes::TextureUsage},
+                {"BSP Cuts", Helpers::ViewportModes::BSPCuts},
+                {"Dynamic Lighting", Helpers::ViewportModes::DynamicLighting},
+                {"Textured", Helpers::ViewportModes::Textured},
+                {"Zones/Portals", Helpers::ViewportModes::ZonesNPortals},
             };
             std::vector<ViewportModeActionCreateData> ToolbarModeActions = {
-                { "Top", "Alt+7", Helpers::ViewportModes::Top},
-                { "Front", "Alt+8", Helpers::ViewportModes::Front},
-                { "Side", "Alt+9", Helpers::ViewportModes::Side},
+                {"Top", "Alt+7", Helpers::ViewportModes::Top},
+                {"Front", "Alt+8", Helpers::ViewportModes::Front},
+                {"Side", "Alt+9", Helpers::ViewportModes::Side},
 
-                { "Wireframe", "Alt+1", Helpers::ViewportModes::Wireframe},
-                { "Zones/Portals", "Alt+2", Helpers::ViewportModes::ZonesNPortals},
-                { "Texture Usage", "Alt+3", Helpers::ViewportModes::TextureUsage},
-                { "BSP Cuts", "Alt+4", Helpers::ViewportModes::BSPCuts},
-                { "Dynamic Lighting", "Alt+5", Helpers::ViewportModes::DynamicLighting},
-                { "Textured", "Alt+6", Helpers::ViewportModes::Textured},
+                {"Wireframe", "Alt+1", Helpers::ViewportModes::Wireframe},
+                {"Zones/Portals", "Alt+2", Helpers::ViewportModes::ZonesNPortals},
+                {"Texture Usage", "Alt+3", Helpers::ViewportModes::TextureUsage},
+                {"BSP Cuts", "Alt+4", Helpers::ViewportModes::BSPCuts},
+                {"Dynamic Lighting", "Alt+5", Helpers::ViewportModes::DynamicLighting},
+                {"Textured", "Alt+6", Helpers::ViewportModes::Textured},
             };
             std::vector<ViewportFlagActionCreateData> ViewActions = {
-                { "Show Active B&rush", "B", Helpers::ViewportShowFlags::SHOW_Brush},
-                { "Show &Moving Brush", "", Helpers::ViewportShowFlags::SHOW_MovingBrushes},
+                {"Show Active B&rush", "B", Helpers::ViewportShowFlags::SHOW_Brush},
+                {"Show &Moving Brush", "", Helpers::ViewportShowFlags::SHOW_MovingBrushes},
 
-                { "Show Back&drop", "K", Helpers::ViewportShowFlags::SHOW_Backdrop},
-                { "Show Coordinates", "", Helpers::ViewportShowFlags::SHOW_Coords},
-                { "Show Paths", "", Helpers::ViewportShowFlags::SHOW_Paths},
+                {"Show Back&drop", "K", Helpers::ViewportShowFlags::SHOW_Backdrop},
+                {"Show Coordinates", "", Helpers::ViewportShowFlags::SHOW_Coords},
+                {"Show Paths", "", Helpers::ViewportShowFlags::SHOW_Paths},
             };
             std::vector<ViewportFlagActionCreateData> ActorsActions = {
-                { "Full Actor View", "H", Helpers::ViewportShowFlags::SHOW_Actors},
-                { "Icon View", "", Helpers::ViewportShowFlags::SHOW_ActorIcons},
-                { "Radii View", "", Helpers::ViewportShowFlags::SHOW_ActorRadii},
+                {"Full Actor View", "H", Helpers::ViewportShowFlags::SHOW_Actors},
+                {"Icon View", "", Helpers::ViewportShowFlags::SHOW_ActorIcons},
+                {"Radii View", "", Helpers::ViewportShowFlags::SHOW_ActorRadii},
                 // No
                 //{ "Hide Actors", "", ~(Helpers::ViewportShowFlags::SHOW_Actors | Helpers::ViewportShowFlags::SHOW_ActorIcons | Helpers::ViewportShowFlags::SHOW_ActorRadii)},
             };
@@ -172,15 +174,16 @@ namespace Components {
              */
             {
                 auto InactiveIcon = QIcon(pAtlas.copy(0, 0, 22, 20));
-                auto ActiveIcon   = QIcon(pAtlas.copy(0, 20, 22, 20));
+                auto ActiveIcon = QIcon(pAtlas.copy(0, 20, 22, 20));
                 m_pRealtimeButton = new ViewportButton<Helpers::ViewportShowFlags>("Realtime Preview (P)",
-                                                                                   ActiveIcon,
-                                                                                   InactiveIcon,
-                                                                                   Helpers::ViewportShowFlags::SHOW_PlayerCtrl,//Helpers::ViewportShowFlags::SHOW_RealTime, // Odd, but it seems to be like this in the UnrealEd code.
-                                                                                   true,
-                                                                                   [=](Helpers::ViewportShowFlags flag) {
-                                                                                       ChangeViewportFlag(flag);
-                                                                                   });
+                    ActiveIcon,
+                    InactiveIcon,
+                    Helpers::ViewportShowFlags::SHOW_PlayerCtrl,
+                    //Helpers::ViewportShowFlags::SHOW_RealTime, // Odd, but it seems to be like this in the UnrealEd code.
+                    true,
+                    [=](Helpers::ViewportShowFlags flag) {
+                        ChangeViewportFlag(flag);
+                    });
                 m_pRealtimeButton->UpdateState(g_pEditorAPI->GetViewportFlags(m_nViewportWindowID));
                 pToolbar->addWidget(m_pRealtimeButton);
                 pToolbar->addSeparator();
@@ -193,14 +196,17 @@ namespace Components {
                 auto data = ToolbarButtons[i];
 
                 // Hacky solution for adding separators!
-                if ( i == 3 ) {
+                if (i == 3) {
                     pToolbar->addSeparator();
                 }
 
-                auto InactiveIcon = QIcon(pAtlas.copy(22*(i+1), 0, 22, 20));
-                auto ActiveIcon = QIcon(pAtlas.copy(22*(i+1), 20, 22, 20));
+                auto InactiveIcon = QIcon(pAtlas.copy(22 * (i + 1), 0, 22, 20));
+                auto ActiveIcon = QIcon(pAtlas.copy(22 * (i + 1), 20, 22, 20));
 
-                auto pButton = new ViewportButton<Helpers::ViewportModes>(data.Tooltip, ActiveIcon, InactiveIcon, data.Mode, false, [=](Helpers::ViewportModes mode) { ChangeViewportMode(mode); });
+                auto pButton = new ViewportButton<Helpers::ViewportModes>(
+                    data.Tooltip, ActiveIcon, InactiveIcon, data.Mode, false, [=](Helpers::ViewportModes mode) {
+                        ChangeViewportMode(mode);
+                    });
                 pButton->UpdateState(m_nCurrentViewportMode);
 
                 pToolbar->addWidget(pButton);
@@ -217,11 +223,14 @@ namespace Components {
                 auto data = ToolbarModeActions[i];
 
                 // Hacky solution for adding separators!
-                if ( i == 3 ) {
+                if (i == 3) {
                     pModeMenu->addSeparator();
                 }
 
-                auto pAction = new ViewportAction<Helpers::ViewportModes>(data.sText, data.sShortcut, data.Mode, false, [=](Helpers::ViewportModes mode) { ChangeViewportMode(mode); });
+                auto pAction = new ViewportAction<Helpers::ViewportModes>(
+                    data.sText, data.sShortcut, data.Mode, false, [=](Helpers::ViewportModes mode) {
+                        ChangeViewportMode(mode);
+                    });
                 pAction->UpdateState(m_nCurrentViewportMode);
 
                 pModeMenu->addAction(pAction);
@@ -237,11 +246,14 @@ namespace Components {
                 auto data = ViewActions[i];
 
                 // Hacky solution for adding separators!
-                if ( i == 2 ) {
+                if (i == 2) {
                     pViewMenu->addSeparator();
                 }
 
-                auto pAction = new ViewportAction<Helpers::ViewportShowFlags>(data.sText, data.sShortcut, data.Flag, true, [=](Helpers::ViewportShowFlags flag) { ChangeViewportFlag(flag); });
+                auto pAction = new ViewportAction<Helpers::ViewportShowFlags>(
+                    data.sText, data.sShortcut, data.Flag, true, [=](Helpers::ViewportShowFlags flag) {
+                        ChangeViewportFlag(flag);
+                    });
 
                 pAction->UpdateState(g_pEditorAPI->GetViewportFlags(m_nViewportWindowID));
                 pViewMenu->addAction(pAction);
@@ -256,7 +268,10 @@ namespace Components {
             for (int i = 0; i < ActorsActions.size(); i++) {
                 auto data = ActorsActions[i];
 
-                auto pAction = new ViewportAction<Helpers::ViewportShowFlags>(data.sText, data.sShortcut, data.Flag, true, [=](Helpers::ViewportShowFlags flag) { ChangeViewportFlag(flag); });
+                auto pAction = new ViewportAction<Helpers::ViewportShowFlags>(
+                    data.sText, data.sShortcut, data.Flag, true, [=](Helpers::ViewportShowFlags flag) {
+                        ChangeViewportFlag(flag);
+                    });
 
                 pAction->UpdateState(g_pEditorAPI->GetViewportFlags(m_nViewportWindowID));
                 pActorsMenu->addAction(pAction);
@@ -271,7 +286,7 @@ namespace Components {
         };
 
 
-        QMainWindow* GetWidget() { return m_pWidget; }
+        QMainWindow *GetWidget() { return m_pWidget; }
     };
 }
 

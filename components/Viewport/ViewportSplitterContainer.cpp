@@ -30,7 +30,7 @@ void ViewportSplitterContainer::Init() {
 }
 
 
-void ViewportSplitterContainer::OnMove(ViewportSplitter *pSplitter, int pos, int index) {
+void ViewportSplitterContainer::OnMove(ViewportSplitter *pSplitter, int pos, int index) const {
     ViewportSplitter* pThis = pSplitter == m_pHSplitter1 ? m_pHSplitter2 : m_pHSplitter1;
     if (!pThis) {
         return;
@@ -38,7 +38,7 @@ void ViewportSplitterContainer::OnMove(ViewportSplitter *pSplitter, int pos, int
     pThis->moveSplitterProxy(pos, index);
 }
 
-void ViewportSplitterContainer::AddWidget(QWidget *pWidget) {
+void ViewportSplitterContainer::AddWidget(QWidget *pWidget) const {
     if (!m_pHSplitter1 || !m_pHSplitter2) {
         return;
     }
