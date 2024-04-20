@@ -1,4 +1,4 @@
 cmake-*
 libs/*
 .idea
-venv
+*venv

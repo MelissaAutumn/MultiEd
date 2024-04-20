@@ -6,7 +6,7 @@ using namespace Components;
 
 void ToolBar::Init() {
     auto pToolbar = new QToolBar("Editor Options");
-    pToolbar->addAction(CreateAction("UnrealEd_121.bmp", "New Map", [=]() { this->NotImplemented(); }));
+    pToolbar->addAction(CreateAction("UnrealEd_121.bmp", "New Map", [=]() { g_pEditorAPI->NewMap(); }));
     pToolbar->addAction(CreateAction("UnrealEd_414.bmp", "Open Map", [=]() { g_pHelperAPI->LoadMap(); }));
     pToolbar->addAction(CreateAction("UnrealEd_415.bmp", "Save Map", [=]() { this->NotImplemented(); }));
     pToolbar->addSeparator();
