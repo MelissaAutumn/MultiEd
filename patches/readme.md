@@ -9,3 +9,11 @@ This is used to avoid a crash on creating multiple viewports (iirc). I'm really 
 ## Allow per viewport input for SDLDrv
 
 This patch checks for inputs on each client tick, and buffers them per viewport it was done in. It also adds some special functionality like clicking on things for MultiEd. This code should only run if we're in editor mode.
+
+## Add GetLastInputState for SDLDrv
+
+This patch adds a function to retrieve and optionally clear the last action for a given key. 
+
+## Add TempRenderDev for SDLDrv From OldUnreal
+
+This patch is an addition from WinViewport which was created by the OldUnreal team. It allows temporary windows to create a framebuffer with a null render device. Used for lighting builds.

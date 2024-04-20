@@ -1,0 +1,100 @@
+diff --git a/SDLDrv/Src/SDLViewport.cpp b/SDLDrv/Src/SDLViewport.cpp
+index a61ba70..d9712d6 100755
+--- a/SDLDrv/Src/SDLViewport.cpp
++++ b/SDLDrv/Src/SDLViewport.cpp
+@@ -630,6 +630,44 @@ UBOOL USDLViewport::Exec( const TCHAR* Cmd, FOutputDevice& Ar )
+ 	Window openining and closing.
+ -----------------------------------------------------------------------------*/
+ 
++//
++// A temporary RenderDevice to satisfy light rebuilding needs.
++// This code was ported from WinViewport from the OldUnreal project
++//
++class UTemporaryRenderDevice : public URenderDeviceOldUnreal469
++{
++	DECLARE_CLASS(UTemporaryRenderDevice, URenderDeviceOldUnreal469, 0)
++
++	// URenderDevice interface.
++	UBOOL Init(UViewport* InViewport, INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen) { return 1; }
++	UBOOL SetRes(INT NewX, INT NewY, INT NewColorBytes, UBOOL Fullscreen) { return 1; }
++	void Exit() {}
++	void Flush(UBOOL AllowPrecache) {}
++	void Flush() {}
++	UBOOL Exec(const TCHAR* Cmd, FOutputDevice& Ar) { return 0; }
++	void Lock(FPlane FlashScale, FPlane FlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* HitData, INT* HitSize) {}
++	void Unlock(UBOOL Blit) {}
++	void DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Surface, FSurfaceFacet& Facet) {}
++	void DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, int NumPts, DWORD PolyFlags, FSpanBuffer* Span) {}
++	void DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, class FSpanBuffer* Span, FLOAT Z, FPlane Color, FPlane Fog, DWORD PolyFlags) {}
++	void Draw3DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector OrigP, FVector OrigQ) {}
++	void Draw2DClippedLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2) {}
++	void Draw2DLine(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2) {}
++	void Draw2DPoint(FSceneNode* Frame, FPlane Color, DWORD LineFlags, FLOAT X1, FLOAT Y1, FLOAT X2, FLOAT Y2, FLOAT Z) {}
++	void ClearZ(FSceneNode* Frame) {}
++	void PushHit(const BYTE* Data, INT Count) {}
++	void PopHit(INT Count, UBOOL bForce) {}
++	void GetStats(TCHAR* Result) {}
++	void ReadPixels(FColor* Pixels) {}
++	void EndFlash() {}
++	void DrawStats(FSceneNode* Frame) {}
++	void SetSceneNode(FSceneNode* Frame) {}
++	void PrecacheTexture(FTextureInfo& Info, DWORD PolyFlags) {}
++
++	DWORD BlitFlags(UBOOL Fullscreen) { return 0; }
++};
++IMPLEMENT_CLASS(UTemporaryRenderDevice);
++
+ //
+ // Open this viewport's window.
+ //
+@@ -642,7 +680,7 @@ void USDLViewport::OpenWindow( void* InParentWindow, UBOOL IsTemporary, INT NewX
+     //check(SDL_GetVideoSurface() == NULL);
+ 
+ 	// Check resolution.
+-	if (GIsEditor)
++	if (GIsEditor && !IsTemporary)
+ 	{
+ 		SDL_DisplayMode mode;
+ 		SDL_GetDesktopDisplayMode(0, &mode);
+@@ -700,15 +738,36 @@ void USDLViewport::OpenWindow( void* InParentWindow, UBOOL IsTemporary, INT NewX
+ 
+ 	debugf( TEXT("Opening SDL viewport.") );
+ 
+-	// Create or update the window.
+-	SizeX = C->FullscreenViewportX;
+-	SizeY = C->FullscreenViewportY;
++	// Framebuffer - This code was ported from WinViewport from the OldUnreal project
++	// Used for lighting builds
++	if (IsTemporary) {
++		// Create in-memory data.
++		BlitFlags     = BLIT_Temporary;
++		ColorBytes    = 2;
++		SizeX         = NewX;
++		SizeY         = NewY;
++		ScreenPointer = static_cast<BYTE *>(appMalloc(2 * NewX * NewY, TEXT("TemporaryViewportData")));
++		Window        = nullptr;
++		debugf( NAME_Log, TEXT("Opened temporary viewport") );
++	} else {
++		// Create or update the window.
++		SizeX = C->FullscreenViewportX;
++		SizeY = C->FullscreenViewportY;
++	}
+ 
+ 	// Create rendering device.
+-	if( !RenDev && ForcedRenDevClass )
++	if( !RenDev && (IsTemporary)) {
++		// stijn: called without TryRenderDevice because we don't need to call init or even give the rendev a viewport
++		UClass* RenDevClass = LoadClass<URenderDeviceOldUnreal469>(NULL, TEXT("SDLDrv.TemporaryRenderDevice"), NULL, LOAD_NoFail, NULL);
++		RenDev = ConstructObject<URenderDeviceOldUnreal469>(RenDevClass, this);
++		check(RenDev);
++	}
++	if( !RenDev && ForcedRenDevClass ) {
+ 		TryRenderDevice( ForcedRenDevClass, NewX, NewY, ColorBytes, C->StartupFullscreen );
+-	if( !RenDev && !GIsEditor && !ParseParam(appCmdLine(),TEXT("nohard")) )
++	}
++	if( !RenDev && !GIsEditor && !ParseParam(appCmdLine(),TEXT("nohard")) ) {
+ 		TryRenderDevice( TEXT("ini:Engine.Engine.GameRenderDevice"), NewX, NewY, ColorBytes, C->StartupFullscreen );
++	}
+ 	check(RenDev);
+ 	UpdateWindowFrame();
+ 	Repaint( 1 );
