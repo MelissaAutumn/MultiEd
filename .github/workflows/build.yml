@@ -40,6 +40,7 @@ jobs:
         git init
         git apply ../../patches/allow-per-viewport-input-sdldrv.patch
         git apply ../../patches/add-getlastinputstate-sdldrv.patch
+        git apply ../../patches/add-temprenderdev-sdldrv-from-oldunreal.patch
 
     - name: Run CMake On SDLDrv
       run: |
