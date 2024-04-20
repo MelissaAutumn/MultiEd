@@ -21,20 +21,14 @@ namespace Components {
     public:
         explicit ActorMenu(QMainWindow* pWindow) : BaseMenu(pWindow) {}
 
-        void Init() override {
-            auto pMenu = new QMenu("Actor");
-
-            CreateAction(pMenu, "Hide Selected Actors", [=](){ this->NotImplemented(); }, "Ctrl+H");
-
-            // Maybe don't have this here?
-            auto pMenuBar = m_pWindow->menuBar();
-            pMenuBar->addMenu(pMenu);
-        };
+        void Init() override;;
 
     private:
 
     private slots:
 
     };
+
+
 }
 #endif //MULTIED_ACTORMENU_H

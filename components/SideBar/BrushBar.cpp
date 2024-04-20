@@ -8,6 +8,7 @@
 #include <Engine.h>
 #include <EditorPrivate.h>
 
+
 void Components::BrushBar::Init() {
     m_pLayout = new QGridLayout();
 

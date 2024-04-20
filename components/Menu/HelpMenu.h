@@ -22,51 +22,25 @@ namespace Components {
     public:
         explicit HelpMenu(QMainWindow* pWindow) : BaseMenu(pWindow) {}
 
-        void Init() override {
-            auto pMenu = new QMenu("&Help");
-
-            CreateAction(pMenu, "&MultiEd Help", [=](){ this->NotImplemented(); }, "F1");
-            pMenu->addSeparator();
-            CreateAction(pMenu, "&Technical Support", [=](){ this->LaunchOldUnrealForum(); });
-            CreateAction(pMenu, "Old&unreal UEd2.2 Forum", [=](){ this->LaunchOldUnrealUEDForum(); }, "F2");
-            CreateAction(pMenu, "&Epic Games Web Site", [=](){ this->LaunchEpicGames(); });
-            CreateAction(pMenu, "&Oldunreal Website", [=](){ this->LaunchOldUnreal(); });
-            pMenu->addSeparator();
-            CreateAction(pMenu, "&About MultiEd", [=](){ this->About(); });
-
-            // Maybe don't have this here?
-            auto pMenuBar = m_pWindow->menuBar();
-            pMenuBar->addMenu(pMenu);
-        };
+        void Init() override;;
 
     private:
 
     private slots:
 
-        void LaunchOldUnrealForum() {
-            const QString sURL = "https://www.oldunreal.com/cgi-bin/yabb2/YaBB.pl";
-            QDesktopServices::openUrl(sURL);
-        }
+        void LaunchOldUnrealForum();
 
-        void LaunchOldUnrealUEDForum() {
-            const QString sURL = "https://www.oldunreal.com/cgi-bin/yabb2/YaBB.pl?board=UnrealEDTwoPointOne";
-            QDesktopServices::openUrl(sURL);
-        }
+        void LaunchOldUnrealUEDForum();
 
-        void LaunchEpicGames() {
-            const QString sURL = "www.epicgames.com";
-            QDesktopServices::openUrl(sURL);
-        }
+        void LaunchEpicGames();
 
-        void LaunchOldUnreal() {
-            const QString sURL = "https://www.oldunreal.com/";
-            QDesktopServices::openUrl(sURL);
-        }
+        void LaunchOldUnreal();
 
-        void About() {
-            QMessageBox::about(m_pWindow, "About MultiEd", "MultiEd is based off of UnrealEd 2.2.\nBuilt by Melissa A.\n\nOriginal UnrealEd version copyright 2000, Epic Games Inc.\nUpdated to UnrealEd 2.2 by www.oldunreal.com.");
-        }
+        void LaunchGitRepo();
 
+        void LaunchGitWiki();
+
+        void About();
     };
 }
 #endif //MULTIED_HELPMENU_H

@@ -9,6 +9,7 @@
 #include <QAction>
 #include <QDebug>
 #include <utility>
+#include <QMouseEvent>
 #include "../../helpers/Defines.h"
 
 namespace Components {

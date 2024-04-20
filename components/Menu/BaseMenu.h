@@ -19,7 +19,7 @@
 namespace Components {
     class BaseMenu : IComponent, public QObject {
     public:
-        BaseMenu(QMainWindow* pWindow) {
+        explicit BaseMenu(QMainWindow* pWindow) {
             m_pWindow = pWindow;
         }
 
@@ -49,5 +49,7 @@ namespace Components {
             QMessageBox::information(m_pWindow, "Go Away!", "Feature not implemented.");
         }
     };
+
+
 }
 #endif //MULTIED_BASEMENU_H

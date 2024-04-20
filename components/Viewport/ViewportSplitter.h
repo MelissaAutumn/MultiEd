@@ -16,11 +16,7 @@ namespace Components {
         explicit ViewportSplitter(QWidget* parent = nullptr) : QSplitter(parent) {}
         explicit ViewportSplitter(Qt::Orientation orientation, QWidget* parent = nullptr) : QSplitter(orientation, parent) {}
 
-        void moveSplitterProxy(int pos, int index) {
-            this->blockSignals(true);
-            this->moveSplitter(pos, index);
-            this->blockSignals(false);
-        };
+        void moveSplitterProxy(int pos, int index);;
     };
 }
 

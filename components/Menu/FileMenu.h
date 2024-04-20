@@ -24,25 +24,7 @@ namespace Components {
             m_sMapName = nullptr;
         }
 
-        void Init() override {
-            auto pMenu = new QMenu("&File");
-
-            CreateAction(pMenu, "&New", [=](){ this->New(); }, "Ctrl+N");
-            CreateAction(pMenu, "&Open", [=](){ this->Open(); }, "Ctrl+O");
-
-            CreateAction(pMenu, "&Save", [=](){ this->Save(); }, "Ctrl+S");
-            CreateAction(pMenu, "Save &As", [=](){ this->SaveAs(); }, "Ctrl+Shift+S");
-
-            CreateAction(pMenu, "&Import", [=](){ this->Import(); });
-            CreateAction(pMenu, "&Export", [=](){ this->Export(); });
-
-            CreateAction(pMenu, "E&xit", [=](){ this->Exit(); });
-
-            // Maybe don't have this here?
-            auto pMenuBar = m_pWindow->menuBar();
-            pMenuBar->addMenu(pMenu);
-
-        };
+        void Init() override;;
 
     private:
 

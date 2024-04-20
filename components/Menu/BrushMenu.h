@@ -21,17 +21,7 @@ namespace Components {
     public:
         explicit BrushMenu(QMainWindow* pWindow) : BaseMenu(pWindow) {}
 
-
-        void Init() override {
-            auto pMenu = new QMenu("&Brush");
-
-            auto pBrushClipMenu = pMenu->addMenu("Brush Clip");
-            CreateAction(pBrushClipMenu, "&Clip", [=](){ this->NotImplemented(); });
-
-            // Maybe don't have this here?
-            auto pMenuBar = m_pWindow->menuBar();
-            pMenuBar->addMenu(pMenu);
-        };
+        void Init() override;;
 
     private:
     private slots:

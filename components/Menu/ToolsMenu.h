@@ -21,15 +21,7 @@ namespace Components {
     public:
         explicit ToolsMenu(QMainWindow* pWindow) : BaseMenu(pWindow) {}
 
-        void Init() override {
-            auto pMenu = new QMenu("&Tools");
-
-            CreateAction(pMenu, "Advanced Options", [=](){ this->NotImplemented(); }, "Ctrl+1");
-
-            // Maybe don't have this here?
-            auto pMenuBar = m_pWindow->menuBar();
-            pMenuBar->addMenu(pMenu);
-        };
+        void Init() override;;
 
     private:
 

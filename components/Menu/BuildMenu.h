@@ -21,15 +21,7 @@ namespace Components {
     public:
         explicit BuildMenu(QMainWindow* pWindow) : BaseMenu(pWindow) {}
 
-        void Init() override {
-            auto pMenu = new QMenu("B&uild");
-
-            CreateAction(pMenu, "&Play Level", [=](){ this->NotImplemented(); }, "Ctrl+P");
-
-            // Maybe don't have this here?
-            auto pMenuBar = m_pWindow->menuBar();
-            pMenuBar->addMenu(pMenu);
-        };
+        void Init() override;;
 
     private:
 

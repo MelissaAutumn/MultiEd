@@ -86,13 +86,32 @@ add_executable(MultiEd main.cpp
         # From SDLLaunch
         FFeedbackContextSDL.h
         FOutputDeviceSDLError.h
-        )
+        components/Menu/ActorMenu.cpp
+        components/Menu/BaseMenu.cpp
+        components/Menu/BrushMenu.cpp
+        components/Menu/BuildMenu.cpp
+        components/Menu/EditMenu.cpp
+        components/Menu/HelpMenu.cpp
+        components/Menu/ToolsMenu.cpp
+        components/Menu/ViewMenu.cpp
+        components/SideBar/BaseBar.cpp
+        components/SideBar/ClipBar.cpp
+        components/SideBar/CSGBar.cpp
+        components/SideBar/MiscBar.cpp
+        components/SideBar/ModeBar.cpp
+        components/SideBar/OrderedSideBar.cpp
+        components/SideBar/SidebarButton.cpp
+        components/ToolBar/Toolbar.cpp
+        components/Viewport/Viewport.cpp
+        components/Viewport/ViewportSplitter.cpp
+)
 
 # Setup some links to shared libraries
 add_library(Core SHARED IMPORTED)
 add_library(Engine SHARED IMPORTED)
 add_library(Editor SHARED IMPORTED)
-add_library(ALAudio SHARED IMPORTED)
+add_library(ALAudio SHARED IMPORTED
+        components/ToolBar/Toolbar.cpp)
 add_library(SDLDrv SHARED IMPORTED)
 
 if (WIN32)
