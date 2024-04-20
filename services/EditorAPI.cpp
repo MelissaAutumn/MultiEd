@@ -7,6 +7,9 @@
  */
 
 #include "EditorAPI.h"
+
+#include <qdatetime.h>
+
 #include "../helpers/SDLHelper.h"
 
 #include "Core.h"
@@ -15,7 +18,7 @@
 
 #include "../ue/UnrealGlue.h"
 #include <SDLDrv.h>
-extern UnrealGlue* g_pUnreal;
+extern UnrealGlue *g_pUnreal;
 
 #define API_IS_AVAILABLE if (!GEditor) { return; }
 #define API_IS_AVAILABLE_VAL(x) if (!GEditor) { return x; }
@@ -25,33 +28,33 @@ extern UnrealGlue* g_pUnreal;
  */
 
 
-UViewport *Services::EditorAPI::FindViewport(WId pViewportID) {
+ViewportData *Services::EditorAPI::FindViewport(WId pViewportID) {
+    guard(FindViewport)
+        if (m_pCachedViewports.find(pViewportID) != m_pCachedViewports.end()) {
+            return m_pCachedViewports.at(pViewportID);
+        }
 
-        guard(FindViewport)
+        auto aViewports = GEditor->Client->Viewports;
 
-                if (m_pCachedViewports.find(pViewportID) != m_pCachedViewports.end()) {
-                    return m_pCachedViewports.at(pViewportID);
-                }
+        for (int i = 0; i < aViewports.Num(); i++) {
+            auto pLookup = aViewports(i);
+            auto pWindow = pLookup->GetWindow();
+            auto pWndID  = (WId) Helpers::GetWindowHandle((SDL_Window *) pWindow);
 
-                auto aViewports = GEditor->Client->Viewports;
+            if (pWndID == pViewportID) {
+                auto viewportData                  = new ViewportData();
+                viewportData->viewport             = pLookup;
+                viewportData->rightClickPressTime = 0;
+                m_pCachedViewports.insert({pWndID, viewportData});
+                return viewportData;
+            }
+        }
 
-                for(int i = 0; i < aViewports.Num(); i++) {
-                    auto pLookup = aViewports(i);
-                    auto pWindow = pLookup->GetWindow();
-                    auto pWndID = (WId)Helpers::GetWindowHandle((SDL_Window*)pWindow);
-
-                    if (pWndID == pViewportID) {
-                        m_pCachedViewports.insert({pWndID, pLookup});
-                        return pLookup;
-                    }
-                }
-
-                return nullptr;
-        unguard
-
+        return nullptr;
+    unguard
 }
 
-bool Services::EditorAPI::ExecCommand(const QString &sCommand)  {
+bool Services::EditorAPI::ExecCommand(const QString &sCommand) {
     API_IS_AVAILABLE_VAL(false);
 
     qDebug() << "[EditorAPI::ExecCommand] " + sCommand;
@@ -68,12 +71,12 @@ bool Services::EditorAPI::ExecCommand(const QString &sCommand)  {
  * @param sCommand
  * @return
  */
-bool Services::EditorAPI::LogExec(const QString &sCommand)  {
+bool Services::EditorAPI::LogExec(const QString &sCommand) {
     return ExecCommand(sCommand);
 }
 
 void Services::EditorAPI::RedrawLevel() {
-    GEditor->RedrawLevel( GEditor->Level );
+    GEditor->RedrawLevel(GEditor->Level);
 }
 
 void Services::EditorAPI::BrushClip() {
@@ -187,115 +190,138 @@ void Services::EditorAPI::BuildBrush(UBrushBuilder *pBrush) {
 
     // I think we need IsScriptable to be flipped in order for this to work.
     UBOOL GIsSavedScriptableSaved = 1;
-    Exchange(GIsScriptable,GIsSavedScriptableSaved);
+    Exchange(GIsScriptable, GIsSavedScriptableSaved);
     pBrush->eventBuild();
-    Exchange(GIsScriptable,GIsSavedScriptableSaved);
+    Exchange(GIsScriptable, GIsSavedScriptableSaved);
 
     this->RedrawLevel();
 }
 
 void Services::EditorAPI::NewMap(bool bAdditive) {
     guard(NewMap)
+        m_pCachedViewports.clear();
 
-            m_pCachedViewports.clear();
+        g_pUnreal->BeforeMapLoad();
 
-            g_pUnreal->BeforeMapLoad();
+        GEditor->Exec(*FString::Printf(TEXT("MAP NEW%ls"), bAdditive ? TEXT(" ADDITIVE") : TEXT("")));
 
-            GEditor->Exec(*FString::Printf(TEXT("MAP NEW%ls"), bAdditive ? TEXT(" ADDITIVE") : TEXT("")));
-
-            g_pUnreal->AfterMapLoad();
+        g_pUnreal->AfterMapLoad();
     unguard
 }
 
 void Services::EditorAPI::LoadMap(const TCHAR *sMap) {
     guard(LoadMap)
+        m_pCachedViewports.clear();
 
-            m_pCachedViewports.clear();
-
-            g_pUnreal->BeforeMapLoad();
-            GEditor->Exec(*(FString::Printf(TEXT("MAP LOAD FILE=\"%ls\""), sMap)));
-            g_pUnreal->AfterMapLoad();
+        g_pUnreal->BeforeMapLoad();
+        GEditor->Exec(*(FString::Printf(TEXT("MAP LOAD FILE=\"%ls\""), sMap)));
+        g_pUnreal->AfterMapLoad();
     unguard
 }
 
 void Services::EditorAPI::SetViewportMode(WId pViewportID, Helpers::ViewportModes mode) {
     guard(SetViewportMode)
-            API_IS_AVAILABLE;
+        API_IS_AVAILABLE;
 
-            auto pViewport = FindViewport(pViewportID);
+        auto viewportData = FindViewport(pViewportID);
 
-            if (!pViewport) {
-                warnf(TEXT("Could not find viewport!"));
-                return;
-            }
+        if (!viewportData || !viewportData->viewport) {
+            warnf(TEXT("Could not find viewport!"));
+            return;
+        }
 
-            std::map<Helpers::ViewportModes, ERenderType> map = {
-                {Helpers::ViewportModes::Ignore, REN_None},	// Hide completely.
-                {Helpers::ViewportModes::Wireframe, REN_Wire},	// Wireframe of EdPolys.
-                {Helpers::ViewportModes::ZonesNPortals, REN_Zones},	// Show zones and zone portals.
-                {Helpers::ViewportModes::TextureUsage, REN_Polys},	// Flat-shaded Bsp.
-                {Helpers::ViewportModes::BSPCuts, REN_PolyCuts},	// Flat-shaded Bsp with normals displayed.
-                {Helpers::ViewportModes::DynamicLighting, REN_DynLight},	// Illuminated texture mapping.
-                {Helpers::ViewportModes::Textured, REN_PlainTex},	// Plain texture mapping.
-                {Helpers::ViewportModes::Top, REN_OrthXY},	// Orthogonal overhead (XY) view.
-                {Helpers::ViewportModes::Front, REN_OrthXZ},	// Orthogonal XZ view.
-                {Helpers::ViewportModes::Side, REN_OrthYZ},	// Orthogonal YZ view.
-                {Helpers::ViewportModes::Ignore, REN_TexView},	// Viewing a texture (no actor).
-                {Helpers::ViewportModes::Ignore, REN_TexBrowser},	// Viewing a texture browser (no actor).
-                {Helpers::ViewportModes::Ignore, REN_MeshView},	// Viewing a mesh.
-                {Helpers::ViewportModes::Ignore, REN_MAX}
-            };
+        auto pViewport = viewportData->viewport;
 
-            if (map.find(mode) == map.end()) {
-                return;
-            }
+        std::map<Helpers::ViewportModes, ERenderType> map = {
+            {Helpers::ViewportModes::Ignore, REN_None}, // Hide completely.
+            {Helpers::ViewportModes::Wireframe, REN_Wire}, // Wireframe of EdPolys.
+            {Helpers::ViewportModes::ZonesNPortals, REN_Zones}, // Show zones and zone portals.
+            {Helpers::ViewportModes::TextureUsage, REN_Polys}, // Flat-shaded Bsp.
+            {Helpers::ViewportModes::BSPCuts, REN_PolyCuts}, // Flat-shaded Bsp with normals displayed.
+            {Helpers::ViewportModes::DynamicLighting, REN_DynLight}, // Illuminated texture mapping.
+            {Helpers::ViewportModes::Textured, REN_PlainTex}, // Plain texture mapping.
+            {Helpers::ViewportModes::Top, REN_OrthXY}, // Orthogonal overhead (XY) view.
+            {Helpers::ViewportModes::Front, REN_OrthXZ}, // Orthogonal XZ view.
+            {Helpers::ViewportModes::Side, REN_OrthYZ}, // Orthogonal YZ view.
+            {Helpers::ViewportModes::Ignore, REN_TexView}, // Viewing a texture (no actor).
+            {Helpers::ViewportModes::Ignore, REN_TexBrowser}, // Viewing a texture browser (no actor).
+            {Helpers::ViewportModes::Ignore, REN_MeshView}, // Viewing a mesh.
+            {Helpers::ViewportModes::Ignore, REN_MAX}
+        };
 
-            auto nRenMap = map.at(mode);
+        if (map.find(mode) == map.end()) {
+            return;
+        }
 
-            pViewport->Actor->RendMap = nRenMap;
-            pViewport->Repaint(1);
+        auto nRenMap = map.at(mode);
+
+        pViewport->Actor->RendMap = nRenMap;
+        pViewport->Repaint(1);
     unguard
 }
 
 void Services::EditorAPI::ToggleViewportFlag(WId pViewportID, Helpers::ViewportShowFlags flag) {
     guard(SetViewportMode)
-            API_IS_AVAILABLE;
+        API_IS_AVAILABLE;
+        auto viewportData = FindViewport(pViewportID);
 
-            auto pViewport = FindViewport(pViewportID);
+        if (!viewportData || !viewportData->viewport) {
+            warnf(TEXT("Could not find viewport!"));
+            return;
+        }
 
-            if (!pViewport) {
-                warnf(TEXT("Could not find viewport!"));
-                return;
-            }
+        auto pViewport = viewportData->viewport;
 
-            pViewport->Actor->ShowFlags ^= flag;
-            pViewport->Repaint(1);
+        pViewport->Actor->ShowFlags ^= flag;
+        pViewport->Repaint(1);
     unguard
 }
 
 Helpers::ViewportShowFlags Services::EditorAPI::GetViewportFlags(WId pViewportID) {
     guard(GetViewportFlags)
-            API_IS_AVAILABLE_VAL((Helpers::ViewportShowFlags)0);
+        API_IS_AVAILABLE_VAL((Helpers::ViewportShowFlags)0);
 
-            auto pViewport = FindViewport(pViewportID);
+        auto viewportData = FindViewport(pViewportID);
 
-            if (!pViewport) {
-                warnf(TEXT("Could not find viewport!"));
-                return (Helpers::ViewportShowFlags)0;
-            }
-
-            return (Helpers::ViewportShowFlags)pViewport->Actor->ShowFlags;
+        if (!viewportData || !viewportData->viewport) {
+            warnf(TEXT("Could not find viewport!"));
+            return (Helpers::ViewportShowFlags) 0;
+        }
+        auto pViewport = viewportData->viewport;
+        return (Helpers::ViewportShowFlags) pViewport->Actor->ShowFlags;
     unguard
 }
 
 bool Services::EditorAPI::DoesViewportHaveRightClick(WId pViewportID) {
-    const auto viewport = this->FindViewport(pViewportID);
+    const auto viewportData = this->FindViewport(pViewportID);
 
-    if (auto sdlViewport = dynamic_cast<USDLViewport *>(viewport)) {
+    // TODO: Clean this up. This isn't the best function.
+    if (auto sdlViewport = dynamic_cast<USDLViewport *>(viewportData->viewport)) {
         EInputAction action = IST_None;
         // Retrieve the last right click state, and if it's release then we have a right click!
         sdlViewport->GetLastInputState(IK_RightMouse, &action, true);
-        return action == IST_Release;
+
+        // Store
+        auto currentTimestamp = QDateTime::currentMSecsSinceEpoch();
+
+        // If its Press then store the currentTimestamp
+        if (action == IST_Press) {
+            viewportData->rightClickPressTime = currentTimestamp;
+            return false;
+        }
+
+        // If the timer is valid (> 0), and the difference is greater than 300ms then it's a hold, not a click
+        if (viewportData->rightClickPressTime > 0 && currentTimestamp - viewportData->rightClickPressTime >= 300 /*ms*/) {
+            return false;
+        }
+
+        // Only accept releases if we've hit IST_Press first. Otherwise we could Pressing on one viewport and releasing on another.
+        if (viewportData->rightClickPressTime > 0 && action == IST_Release) {
+            viewportData->rightClickPressTime = 0;
+            return true;
+        }
+
+        return false;
     }
 
     return false;
@@ -306,4 +332,3 @@ void Services::EditorAPI::SetMode(Helpers::EditorModes mode) {
 
     GEditor->edcamSetMode(mode);
 }
-

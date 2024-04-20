@@ -13,6 +13,12 @@
 template< class T > class TArray;
 class UBrushBuilder;
 class UViewport;
+
+struct ViewportData {
+    UViewport* viewport;
+    int64_t rightClickPressTime;
+};
+
 /**
  * Communicates with the Editor API in UnrealEd
  * TODO: Could get biiiig! Maybe split it off into sub-sections?
@@ -137,9 +143,9 @@ namespace Services {
         bool DoesViewportHaveRightClick(WId pViewportID);
 
     private:
-        std::map<WId, UViewport*> m_pCachedViewports;
+        std::map<WId, ViewportData*> m_pCachedViewports;
 
-        UViewport* FindViewport(WId pViewportID);
+        ViewportData* FindViewport(WId pViewportID);
     };
 }
 
