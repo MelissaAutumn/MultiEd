@@ -9,7 +9,7 @@
 using namespace Components;
 
 // Timer resolution for updates
-constexpr int updateTimerMs = 100;
+constexpr int updateTimerMs = 50;
 
 MultiEdWindow::~MultiEdWindow() {
     delete m_pDockWidget;

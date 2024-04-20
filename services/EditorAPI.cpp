@@ -310,8 +310,8 @@ bool Services::EditorAPI::DoesViewportHaveRightClick(WId pViewportID) {
             return false;
         }
 
-        // If the timer is valid (> 0), and the difference is greater than 300ms then it's a hold, not a click
-        if (viewportData->rightClickPressTime > 0 && currentTimestamp - viewportData->rightClickPressTime >= 300 /*ms*/) {
+        // If the timer is valid (> 0), and the difference is greater than 200ms then it's a hold, not a click
+        if (viewportData->rightClickPressTime > 0 && currentTimestamp - viewportData->rightClickPressTime >= 200 /*ms*/) {
             return false;
         }
 
