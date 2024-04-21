@@ -361,8 +361,6 @@ bool UnrealGlue::Loop() {
                 return false;
             }
 
-
-
             try {
                 DOUBLE  &OldTime         = args->OldTime;
                 DOUBLE  &SecondStartTime = args->SecondStartTime;

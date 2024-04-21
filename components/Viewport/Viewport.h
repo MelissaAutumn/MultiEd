@@ -40,7 +40,7 @@ namespace Components {
         std::vector<ViewportAction<Helpers::ViewportModes> *> m_vViewportModeActions;
         std::vector<ViewportAction<Helpers::ViewportShowFlags> *> m_vViewportFlags;
 
-
+        // Is set on RightClick Press, used to determine if the right click is a hold or click.
         uint32_t m_RightClickTimestamp;
 
     protected:
@@ -54,7 +54,6 @@ namespace Components {
                 pAction->setShortcut(QKeySequence::fromString(sShortcut));
             }
             QMainWindow::connect(pAction, &QAction::triggered, f);
-
 
             // Finally add it to our menu
             pModeMenu->addAction(pAction);
@@ -73,8 +72,6 @@ namespace Components {
 
 
         void Init() override;;
-
-        void Update();
 
         /**
          * Open a context menu for a selection of actor(s)

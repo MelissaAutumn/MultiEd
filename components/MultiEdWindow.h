@@ -61,7 +61,6 @@ namespace Components {
         ~MultiEdWindow() override;
 
         void Init();
-        void InitInputs();
         void SetViewport(QWidget* pWidget, WId nWindowID, Helpers::ViewportModes nMode);
         void Update();
 
