@@ -466,7 +466,7 @@ void Services::EditorAPI::SetCurrentTexture()
         return;
     }
 
-
+    this->ExecCommand("POLY SETTEXTURE");
 }
 
 void Services::EditorAPI::SetMode(Helpers::EditorModes mode) {

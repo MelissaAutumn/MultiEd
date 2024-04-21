@@ -311,7 +311,7 @@ void Viewport::OpenSurfaceMenu() {
     menu.addAction("Make Texture Current", [=] { g_pEditorAPI->MakeTextureCurrent(); });
     menu.addSeparator();
     menu.addMenu(&selectMenu);
-    menu.addAction(QString("Apply &Texture %1").arg(g_pEditorAPI->GetCurrentTextureName()));
+    menu.addAction(QString("Apply &Texture %1").arg(g_pEditorAPI->GetCurrentTextureName()), [=] { g_pEditorAPI->SetCurrentTexture(); });
     menu.addSeparator();
     menu.addAction("Align Viewport Cameras to 3D");
     menu.addSeparator();
