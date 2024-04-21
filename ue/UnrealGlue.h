@@ -40,6 +40,8 @@ public:
     std::vector<intptr_t*> m_pWndIDs;
     std::vector<Helpers::ViewportModes> m_nViewportModes;
 
+    uint32_t RegisterUserEvent(void* callbackFn);
+
 private:
     // Returns UEngine*, however QT and ue were interfering, so cast it yourself.
     static UEngine* InitEngine();
@@ -48,6 +50,7 @@ private:
     std::vector<UViewport*> m_pViewports;
     std::vector<int32_t> m_vViewportFlagsBeforeMapLoad;
 
+    std::map<uint32_t, void*> m_userEvents;
 };
 
 

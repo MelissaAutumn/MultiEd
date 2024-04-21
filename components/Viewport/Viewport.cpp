@@ -2,6 +2,8 @@
 // Created by melissaa on 20/04/24.
 //
 #include "Viewport.h"
+
+#include "../MultiEdWindow.h"
 #include "../../services/Services.h"
 using namespace Components;
 
@@ -223,21 +225,6 @@ void Viewport::Init() {
     m_pWidget->addToolBar(pToolbar);
 }
 
-void Viewport::Update() {
-    if (g_pEditorAPI->DoesViewportHaveRightClick(this->m_nViewportWindowID)) {
-        if (g_pEditorAPI->m_selectionData.size() == 0)
-        {
-            this->OpenDefaultMenu();
-        }
-        else if (g_pEditorAPI->m_selectionData[0].type == SelectedType::ST_ACTOR)
-        {
-            this->OpenActorMenu();
-        } else
-        {
-            this->OpenSurfaceMenu();
-        }
-    }
-}
 
 void Viewport::OpenActorMenu() {
     QMenu menu("PopUp Menu");
@@ -330,4 +317,57 @@ void Viewport::OpenDefaultMenu() {
     menu.addSeparator();
     menu.addAction("Etc...");
     menu.exec(QCursor::pos());
+}
+
+void Viewport::handleRightClick(bool isReleased, uint32_t timestamp)
+{
+    if (!isReleased)
+    {
+        this->m_RightClickTimestamp = timestamp;
+        return;
+    }
+
+    // If the Press to Release was greater than 100ms treat it as a hold and ignore it!
+    if (SDL_GetTicks() - this->m_RightClickTimestamp >= 100/*ms*/)
+    {
+        this->m_RightClickTimestamp = 0;
+        return;
+    }
+
+    g_pEditorAPI->FindSelected();
+    if (g_pEditorAPI->m_selectionData.empty())
+    {
+        this->OpenDefaultMenu();
+    }
+    else if (g_pEditorAPI->m_selectionData[0].type == SelectedType::ST_ACTOR)
+    {
+        this->OpenActorMenu();
+    } else
+    {
+        this->OpenSurfaceMenu();
+    }
+
+}
+
+Viewport::Viewport(QMainWindow* pWindow, WId nViewportWindowID, Helpers::ViewportModes nCurrentMode): m_pDropdownMenu(
+    nullptr), m_pDropdownButton(
+    nullptr), m_pRealtimeButton(
+    nullptr)
+{
+    m_pWindow              = pWindow;
+    m_nViewportWindowID    = nViewportWindowID;
+    m_nCurrentViewportMode = nCurrentMode;
+    m_pWidget              = nullptr;
+    m_RightClickTimestamp  = 0;
+
+
+    connect(reinterpret_cast<MultiEdWindow*>(pWindow), &MultiEdWindow::rightClick, [=](WId windowId, bool isReleased, uint32_t timestamp)
+    {
+        // This is dumb but I plumbed it wrong so it will be fixed in the future
+        // The lookups should mostly be cached...
+        if (g_pEditorAPI->GetViewportSDLWindowId(this->m_nViewportWindowID) == windowId)
+        {
+            this->handleRightClick(isReleased, timestamp);
+        }
+    });
 }

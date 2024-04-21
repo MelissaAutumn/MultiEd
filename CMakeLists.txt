@@ -54,8 +54,8 @@ add_executable(MultiEd main.cpp
         components/ToolBar/ToolBar.h
         components/Viewport/Viewport.h
         components/MultiEdWindow.h
-        services/EditorAPI.h
         components/MultiEdWindow.cpp
+        services/EditorAPI.h
         ue/UnrealGlue.cpp
         ue/UnrealGlue.h
         services/Services.h

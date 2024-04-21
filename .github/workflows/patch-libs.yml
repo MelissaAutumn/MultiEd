@@ -42,8 +42,8 @@ jobs:
           git init
           git apply ../../patches/fix-opengl.patch
           git apply ../../patches/allow-per-viewport-input-sdldrv.patch
-          git apply ../../patches/add-getlastinputstate-sdldrv.patch
           git apply ../../patches/add-temprenderdev-sdldrv-from-oldunreal.patch
+          git apply ../../patches/add-custom-user-input-events-sdldrv.patch
 
       - name: Run CMake
         run: |

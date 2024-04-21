@@ -87,6 +87,10 @@ int main(int argc, char* argv[])
             break;
         }
 #endif
+
+        // Lol this is here now.
+        pMainWindow->Update();
+
         // Unreal loop
         auto bOkay = g_pUnreal->Loop();
         if (!bOkay)

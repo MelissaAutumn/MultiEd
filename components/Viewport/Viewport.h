@@ -25,7 +25,7 @@ namespace Components {
     protected:
 
     private:
-        QMainWindow *m_pWindow;
+        QMainWindow *m_pWindow{};
         QMainWindow *m_pWidget;
         WId m_nViewportWindowID;
 
@@ -40,6 +40,9 @@ namespace Components {
         std::vector<ViewportAction<Helpers::ViewportModes> *> m_vViewportModeActions;
         std::vector<ViewportAction<Helpers::ViewportShowFlags> *> m_vViewportFlags;
 
+
+        uint32_t m_RightClickTimestamp;
+
     protected:
         template<typename ActionFunction>
         void CreateAction(QMenu *pModeMenu, const QString &sText, const ActionFunction f,
@@ -52,6 +55,7 @@ namespace Components {
             }
             QMainWindow::connect(pAction, &QAction::triggered, f);
 
+
             // Finally add it to our menu
             pModeMenu->addAction(pAction);
 
@@ -62,16 +66,10 @@ namespace Components {
 
         void ChangeViewportFlag(Helpers::ViewportShowFlags flag);
 
+    public slots:
+        void handleRightClick(bool isReleased, uint32_t timestamp);
     public:
-        explicit Viewport(QMainWindow *pWindow, WId nViewportWindowID, Helpers::ViewportModes nCurrentMode): m_pDropdownMenu(
-            nullptr), m_pDropdownButton(
-            nullptr), m_pRealtimeButton(
-            nullptr) {
-            m_pWindow              = pWindow;
-            m_nViewportWindowID    = nViewportWindowID;
-            m_nCurrentViewportMode = nCurrentMode;
-            m_pWidget              = nullptr;
-        }
+        explicit Viewport(QMainWindow *pWindow, WId nViewportWindowID, Helpers::ViewportModes nCurrentMode);
 
 
         void Init() override;;
@@ -93,6 +91,7 @@ namespace Components {
 
 
         QMainWindow *GetWidget() { return m_pWidget; }
+
     };
 }
 

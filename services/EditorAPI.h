@@ -169,7 +169,6 @@ namespace Services {
         void ToggleViewportFlag(WId pViewportID, Helpers::ViewportShowFlags flag);
         Helpers::ViewportShowFlags GetViewportFlags(WId pViewportID);
 
-        bool DoesViewportHaveRightClick(WId pViewportID);
         void FindSelected();
 
 
@@ -179,12 +178,18 @@ namespace Services {
         QString GetCurrentTextureName();
         void SetCurrentTexture();
 
+        void RegisterRightClickEvent();
+        ViewportData* FindViewport(WId pViewportID);
+        uint32_t GetViewportSDLWindowId(WId pViewportID);
+
         // Selected Actor/Surface
         std::vector<SelectedData> m_selectionData;
+
     private:
         std::map<WId, ViewportData*> m_pCachedViewports;
 
-        ViewportData* FindViewport(WId pViewportID);
+
+        uint32_t m_rightClickEventId = 0;
 
 
     };

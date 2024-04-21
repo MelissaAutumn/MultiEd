@@ -3,8 +3,6 @@
 //
 
 #include "MultiEdWindow.h"
-#include "BrushProperties/BrushProperties.h"
-#include "Preferences/Preferences.h"
 
 using namespace Components;
 
@@ -50,9 +48,21 @@ void MultiEdWindow::SetViewport(QWidget *pWidget, WId nWindowID, Helpers::Viewpo
 }
 
 void MultiEdWindow::Update() {
-    for (auto viewport : m_viewports) {
-        viewport->Update();
+    SDL_Event event;
+    SDL_PumpEvents();
+
+    while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_USEREVENT, SDL_LASTEVENT))
+    {
+        // IK_RightMouse from EnginePrivate.h
+        if (event.user.code == 2)
+        {
+            auto action = reinterpret_cast<int64_t>(event.user.data1);
+
+            // IST_Release = 3
+            this->rightClick(event.user.windowID, action == 3, event.user.timestamp);
+        }
     }
+
 }
 
 void MultiEdWindow::Init() {
@@ -63,11 +73,7 @@ void MultiEdWindow::Init() {
     // Temp until I make a button for it :)
     //auto pref = new Components::Preferences();
 
-    // Update function timer
-    auto timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, QOverload<>::of(&MultiEdWindow::Update));
-    timer->start(updateTimerMs);
-
+    g_pEditorAPI->RegisterRightClickEvent();
 
     // Side Bar
 
@@ -127,3 +133,5 @@ void MultiEdWindow::Init() {
     this->show();
 
 }
+
+#include "moc_MultiEdWindow.cpp"

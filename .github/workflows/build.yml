@@ -34,21 +34,6 @@ jobs:
     - name: Run Setup Build Script
       run: python .github/workflow_scripts/setup_build.py linux
 
-    - name: Apply patches
-      run: |
-        cd libs/OldUnrealSDK
-        git init
-        git apply ../../patches/allow-per-viewport-input-sdldrv.patch
-        git apply ../../patches/add-getlastinputstate-sdldrv.patch
-        git apply ../../patches/add-temprenderdev-sdldrv-from-oldunreal.patch
-
-    - name: Run CMake On SDLDrv
-      run: |
-        cd libs/OldUnrealSDK
-        cmake -DCMAKE_INSTALL_PREFIX="./System64" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B ./cmake-build-release-clang
-        cmake --build ./cmake-build-release-clang --target SDLDrv
-        cp ./cmake-build-release-clang/SDLDrv.so ./System64/SDLDrv.so
-
     - name: Run CMake
       run: |
         cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B ./cmake-build-debug-clang

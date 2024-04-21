@@ -156,9 +156,9 @@ void UnrealGlue::Boot(int argc, char **argv) {
     debugf(TEXT("Booting UnrealGlue"));
 
     // Boot up SDL2, if we haven't already
-    if (!SDL_WasInit(SDL_INIT_VIDEO)) {
-        if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-            appErrorf(TEXT("SDL_Init failed: %s"), SDL_GetError());
+    if (!SDL_WasInit(SDL_INIT_VIDEO|SDL_INIT_EVENTS)) {
+        if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS) != 0) {
+            appErrorf(TEXT("SDL_Init failed: %hs"), SDL_GetError());
         }
     } else {
         debugf(TEXT("SDL is already init!"));
@@ -360,6 +360,8 @@ bool UnrealGlue::Loop() {
                 GIsRunning = 0;
                 return false;
             }
+
+
 
             try {
                 DOUBLE  &OldTime         = args->OldTime;

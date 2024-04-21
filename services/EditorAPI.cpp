@@ -56,6 +56,13 @@ ViewportData *Services::EditorAPI::FindViewport(WId pViewportID) {
     unguard
 }
 
+uint32_t Services::EditorAPI::GetViewportSDLWindowId(WId pViewportID)
+{
+    auto viewportData = this->FindViewport(pViewportID);
+    auto window = viewportData->viewport->GetWindow();
+    return SDL_GetWindowID(static_cast<SDL_Window*>(window));
+}
+
 bool Services::EditorAPI::ExecCommand(const QString &sCommand) {
     API_IS_AVAILABLE_VAL(false);
 
@@ -349,46 +356,45 @@ Helpers::ViewportShowFlags Services::EditorAPI::GetViewportFlags(WId pViewportID
     unguard
 }
 
-bool Services::EditorAPI::DoesViewportHaveRightClick(WId pViewportID) {
-    const auto viewportData = this->FindViewport(pViewportID);
+/**
+ * A simple class to get a return value from Exec
+ * There may be another way to do this but I don't know it!
+ * Leave a github issue or PR :)
+ */
+class FReturnDevice : public FOutputDevice
+{
+public:
+    virtual ~FReturnDevice() = default;
+    void Serialize(const TCHAR* V, EName Event) override
+    {
+        returnValue.ui = 0;
+        returnType = Event;
+        auto string = QString::fromWCharArray(V);
 
-
-
-    // TODO: Clean this up. This isn't the best function.
-    if (auto sdlViewport = dynamic_cast<USDLViewport *>(viewportData->viewport)) {
-        EInputAction action = IST_None;
-        // Retrieve the last right click state, and if it's release then we have a right click!
-        sdlViewport->GetLastInputState(IK_RightMouse, &action, true);
-
-        // Store
-        auto currentTimestamp = QDateTime::currentMSecsSinceEpoch();
-
-        // If its Press then store the currentTimestamp
-        if (action == IST_Press) {
-            viewportData->rightClickPressTime = currentTimestamp;
-            return false;
+        if (Event == EName::NAME_Int)
+        {
+            this->returnValue.ui = string.toUInt();
         }
-
-        // If the timer is valid (> 0), and the difference is greater than 200ms then it's a hold, not a click
-        if (viewportData->rightClickPressTime > 0 && currentTimestamp - viewportData->rightClickPressTime >= 200 /*ms*/) {
-            return false;
+        else if (Event == EName::NAME_Float)
+        {
+            this->returnValue.f = string.toFloat();
         }
-
-        // Only accept releases if we've hit IST_Press first. Otherwise we could Pressing on one viewport and releasing on another.
-        if (viewportData->rightClickPressTime > 0 && action == IST_Release) {
-            viewportData->rightClickPressTime = 0;
-
-            // Fill up our selection lists
-            FindSelected();
-
-            return true;
+        else if (Event == EName::NAME_Bool)
+        {
+            this->returnValue.b = string.toInt();
         }
+    };
 
-        return false;
-    }
+    EName returnType = EName::NAME_None;
 
-    return false;
-}
+    union
+    {
+        uint32_t ui;
+        float f;
+        bool b;
+    } returnValue;
+
+};
 
 void Services::EditorAPI::FindSelected()
 {
@@ -467,6 +473,19 @@ void Services::EditorAPI::SetCurrentTexture()
     }
 
     this->ExecCommand("POLY SETTEXTURE");
+}
+
+void Services::EditorAPI::RegisterRightClickEvent()
+{
+    auto rd = FReturnDevice();
+
+    // IK_RightMouse = 2;
+    GEditor->Client->Exec(L"REGISTER_INPUTEVENT KEY=2", rd);
+
+    if (rd.returnType == EName::NAME_Int)
+    {
+        m_rightClickEventId = rd.returnValue.ui;
+    }
 }
 
 void Services::EditorAPI::SetMode(Helpers::EditorModes mode) {

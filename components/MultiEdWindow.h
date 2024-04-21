@@ -33,7 +33,7 @@
 // TODO: Should this be in a different namespace?
 namespace Components {
     class MultiEdWindow : public QMainWindow {
-
+    Q_OBJECT;
     private:
         QMainWindow* m_pViewport{};
         ViewportSplitterContainer* m_pQuadView{};
@@ -61,10 +61,13 @@ namespace Components {
         ~MultiEdWindow() override;
 
         void Init();
+        void InitInputs();
         void SetViewport(QWidget* pWidget, WId nWindowID, Helpers::ViewportModes nMode);
         void Update();
 
         SDL_Window* m_pSDLWindow{};
+    signals:
+        void rightClick(WId windowId, bool isReleased, uint32_t timestamp);
     };
 }
 
