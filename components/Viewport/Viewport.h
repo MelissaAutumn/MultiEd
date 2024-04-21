@@ -78,8 +78,17 @@ namespace Components {
 
         void Update();
 
+        /**
+         * Open a context menu for a selection of actor(s)
+         */
         void OpenActorMenu();
+        /**
+         * Open a context menu for a selection of surface(s)
+         */
         void OpenSurfaceMenu();
+        /**
+         * Open the default context menu when you right click on nothing with nothing selected!
+         */
         void OpenDefaultMenu();
 
 

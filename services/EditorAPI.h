@@ -172,6 +172,13 @@ namespace Services {
         bool DoesViewportHaveRightClick(WId pViewportID);
         void FindSelected();
 
+
+        bool HasBrowserClassSelected();
+
+        void MakeTextureCurrent();
+        QString GetCurrentTextureName();
+        void SetCurrentTexture();
+
         // Selected Actor/Surface
         std::vector<SelectedData> m_selectionData;
     private:

@@ -420,6 +420,55 @@ void Services::EditorAPI::FindSelected()
     }
 }
 
+bool Services::EditorAPI::HasBrowserClassSelected()
+{
+    return !!GEditor->CurrentClass;
+}
+
+void Services::EditorAPI::MakeTextureCurrent()
+{
+    API_IS_AVAILABLE;
+    if (m_selectionData.empty())
+    {
+        return;
+    }
+
+    auto lastSelection = m_selectionData[m_selectionData.size()-1];
+
+    if (lastSelection.type != SelectedType::ST_SURFACE)
+    {
+        return;
+    }
+
+    GEditor->CurrentTexture = GEditor->Level->Model->Surfs(lastSelection.index).Texture;
+    if (GEditor->CurrentTexture)
+    {
+        QString texName = QString::fromWCharArray(GEditor->CurrentTexture->GetName());
+        qInfo() << "Current Texture " << lastSelection.index << texName;
+    }
+}
+
+QString Services::EditorAPI::GetCurrentTextureName()
+{
+    API_IS_AVAILABLE_VAL("");
+    if (!GEditor->CurrentTexture)
+    {
+        return "";
+    }
+    return QString::fromWCharArray(GEditor->CurrentTexture->GetName());
+}
+
+void Services::EditorAPI::SetCurrentTexture()
+{
+    API_IS_AVAILABLE;
+    if (!GEditor->CurrentTexture)
+    {
+        return;
+    }
+
+
+}
+
 void Services::EditorAPI::SetMode(Helpers::EditorModes mode) {
     API_IS_AVAILABLE;
 

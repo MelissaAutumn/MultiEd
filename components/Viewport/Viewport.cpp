@@ -252,14 +252,71 @@ void Viewport::OpenActorMenu() {
 }
 
 void Viewport::OpenSurfaceMenu() {
-    QMenu menu("PopUp Menu");
-    menu.addAction(QString("Surface Properties"));
+    QMenu alignMenu("&Align Selected");
+    alignMenu.addAction("Align as &Floor/Ceiling");
+    alignMenu.addAction("Align Wall &Direction");
+    alignMenu.addAction("Align Wall &Panning");
+    alignMenu.addAction("Align to Wall Around &X Axis");
+    alignMenu.addAction("Align to Wall Around &Y Axis");
+    alignMenu.addAction("Align to Wall Around &Z Axis");
+    alignMenu.addAction("Align to Wall for &Cylinder");
+    alignMenu.addAction("Align as &Auto");
+    alignMenu.addAction("Align as One &Tile");
+    alignMenu.addAction("Align as One Tile (&U)");
+    alignMenu.addAction("Align as One Tile (&V)");
+    alignMenu.addSeparator();
+    alignMenu.addAction("&Unalign Back To Default");  // Gasp plot twist!
+
+    QMenu selectMenu("&Select Surfaces");
+    selectMenu.addAction("Select &All Surfaces");
+    selectMenu.addAction("Select &None");
+    selectMenu.addAction("Matching &Zones");
+    selectMenu.addAction("Matching &Groups");
+    selectMenu.addAction("Matching &Items");
+    selectMenu.addAction("Matching &Brush");
+    selectMenu.addAction("Matching &Texture");
+    selectMenu.addAction("Matching &PolyFlags");
+    selectMenu.addSeparator();
+    selectMenu.addAction("All Ad&jacents");
+    selectMenu.addAction("Adjacent &Coplanars");
+    selectMenu.addAction("Adjacent &Walls");
+    selectMenu.addAction("Adjacent &Floors/Ceilings");
+    selectMenu.addAction("Adjacent &Slants");
+    selectMenu.addSeparator();
+    selectMenu.addAction("Reverse");
+    selectMenu.addSeparator();
+    selectMenu.addAction("&Memorize Set");
+    selectMenu.addAction("&Recall Memory");
+    selectMenu.addAction("&Or With Memory");
+    selectMenu.addAction("&And With Memory");
+    selectMenu.addAction("&Xor With Memory");
+
+
+    QMenu menu("Surface Menu");
+    menu.addAction(QString("Surface &Properties (%1 Selected)"));
     menu.addSeparator();
-    menu.addAction("Add light here", [=]() {
+    if (g_pEditorAPI->HasBrowserClassSelected())
+    {
+        menu.addAction("Add Class Here");
+    }
+    menu.addAction("Add &Light Here", [=]() {
         g_pEditorAPI->AddLightHere();
     });
+    menu.addAction("&Move Brush Here");
+    menu.addAction("Add PlayerStart Here");
     menu.addSeparator();
-    menu.addAction("Etc...");
+    menu.addMenu(&alignMenu);
+    menu.addAction("&Reset");
+    menu.addAction("&Tessellate Surface");
+    menu.addAction("Make Texture Current", [=] { g_pEditorAPI->MakeTextureCurrent(); });
+    menu.addSeparator();
+    menu.addMenu(&selectMenu);
+    menu.addAction(QString("Apply &Texture %1").arg(g_pEditorAPI->GetCurrentTextureName()));
+    menu.addSeparator();
+    menu.addAction("Align Viewport Cameras to 3D");
+    menu.addSeparator();
+    menu.addAction("Paste Actor &Click Location");
+
     menu.exec(QCursor::pos());
 }
 
