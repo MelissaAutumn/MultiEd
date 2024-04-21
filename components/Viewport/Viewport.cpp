@@ -223,16 +223,54 @@ void Viewport::Init() {
     m_pWidget->addToolBar(pToolbar);
 }
 
-void Viewport::Update() const {
+void Viewport::Update() {
     if (g_pEditorAPI->DoesViewportHaveRightClick(this->m_nViewportWindowID)) {
-        QMenu menu("PopUp Menu");
-        menu.addAction("Properties");
-        menu.addSeparator();
-        menu.addAction("Add light here", [=]() {
-            g_pEditorAPI->AddLightHere();
-        });
-        menu.addSeparator();
-        menu.addAction("Etc...");
-        menu.exec(QCursor::pos());
+        if (g_pEditorAPI->m_selectionData.size() == 0)
+        {
+            this->OpenDefaultMenu();
+        }
+        else if (g_pEditorAPI->m_selectionData[0].type == SelectedType::ST_ACTOR)
+        {
+            this->OpenActorMenu();
+        } else
+        {
+            this->OpenSurfaceMenu();
+        }
     }
+}
+
+void Viewport::OpenActorMenu() {
+    QMenu menu("PopUp Menu");
+    menu.addAction(QString("Actor Properties"));
+    menu.addSeparator();
+    menu.addAction("Add light here", [=]() {
+        g_pEditorAPI->AddLightHere();
+    });
+    menu.addSeparator();
+    menu.addAction("Etc...");
+    menu.exec(QCursor::pos());
+}
+
+void Viewport::OpenSurfaceMenu() {
+    QMenu menu("PopUp Menu");
+    menu.addAction(QString("Surface Properties"));
+    menu.addSeparator();
+    menu.addAction("Add light here", [=]() {
+        g_pEditorAPI->AddLightHere();
+    });
+    menu.addSeparator();
+    menu.addAction("Etc...");
+    menu.exec(QCursor::pos());
+}
+
+void Viewport::OpenDefaultMenu() {
+    QMenu menu("PopUp Menu");
+    menu.addAction(QString("Level Properties"));
+    menu.addSeparator();
+    menu.addAction("Add light here", [=]() {
+        g_pEditorAPI->AddLightHere();
+    });
+    menu.addSeparator();
+    menu.addAction("Etc...");
+    menu.exec(QCursor::pos());
 }

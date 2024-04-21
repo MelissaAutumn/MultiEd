@@ -352,6 +352,8 @@ Helpers::ViewportShowFlags Services::EditorAPI::GetViewportFlags(WId pViewportID
 bool Services::EditorAPI::DoesViewportHaveRightClick(WId pViewportID) {
     const auto viewportData = this->FindViewport(pViewportID);
 
+
+
     // TODO: Clean this up. This isn't the best function.
     if (auto sdlViewport = dynamic_cast<USDLViewport *>(viewportData->viewport)) {
         EInputAction action = IST_None;
@@ -375,6 +377,10 @@ bool Services::EditorAPI::DoesViewportHaveRightClick(WId pViewportID) {
         // Only accept releases if we've hit IST_Press first. Otherwise we could Pressing on one viewport and releasing on another.
         if (viewportData->rightClickPressTime > 0 && action == IST_Release) {
             viewportData->rightClickPressTime = 0;
+
+            // Fill up our selection lists
+            FindSelected();
+
             return true;
         }
 
@@ -382,6 +388,36 @@ bool Services::EditorAPI::DoesViewportHaveRightClick(WId pViewportID) {
     }
 
     return false;
+}
+
+void Services::EditorAPI::FindSelected()
+{
+    m_selectionData.clear();
+
+    if (!GEditor || !GEditor->Level)
+    {
+        return;
+    }
+
+    for (int i = 0; i < GEditor->Level->Actors.Num(); ++i)
+    {
+        auto actor = GEditor->Level->Actors(i);
+        if (actor)
+        {
+            if (actor->bSelected)
+            {
+                m_selectionData.push_back({SelectedType::ST_ACTOR, i});
+            }
+        }
+    }
+    for (int i = 0; i < GEditor->Level->Model->Surfs.Num(); ++i)
+    {
+        auto surf = GEditor->Level->Model->Surfs(i);
+        if (surf.PolyFlags & EPolyFlags::PF_Selected)
+        {
+            m_selectionData.push_back({SelectedType::ST_SURFACE, i});
+        }
+    }
 }
 
 void Services::EditorAPI::SetMode(Helpers::EditorModes mode) {

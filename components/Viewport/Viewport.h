@@ -76,7 +76,12 @@ namespace Components {
 
         void Init() override;;
 
-        void Update() const;
+        void Update();
+
+        void OpenActorMenu();
+        void OpenSurfaceMenu();
+        void OpenDefaultMenu();
+
 
         QMainWindow *GetWidget() { return m_pWidget; }
     };

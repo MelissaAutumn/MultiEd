@@ -9,6 +9,7 @@
 #include <QtDebug>
 #include "../helpers/Defines.h"
 
+class AActor;
 //class TArray;
 template< class T > class TArray;
 class UBrushBuilder;
@@ -18,6 +19,22 @@ struct ViewportData {
     UViewport* viewport;
     int64_t rightClickPressTime;
 };
+
+enum class SelectedType
+{
+    ST_NONE = 0,
+    ST_ACTOR = 1,
+    ST_SURFACE = 2,
+
+    ST_MAX = 3,
+};
+
+struct SelectedData
+{
+    SelectedType type;
+    int index;
+};
+
 
 /**
  * Communicates with the Editor API in UnrealEd
@@ -153,11 +170,16 @@ namespace Services {
         Helpers::ViewportShowFlags GetViewportFlags(WId pViewportID);
 
         bool DoesViewportHaveRightClick(WId pViewportID);
+        void FindSelected();
 
+        // Selected Actor/Surface
+        std::vector<SelectedData> m_selectionData;
     private:
         std::map<WId, ViewportData*> m_pCachedViewports;
 
         ViewportData* FindViewport(WId pViewportID);
+
+
     };
 }
 
