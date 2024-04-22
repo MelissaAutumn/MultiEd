@@ -63,38 +63,74 @@ namespace Services {
 
         void SetMode(Helpers::EditorModes mode);
 
-#if 0
-        void ModeCamera() {
-            this->SetMode( EM_ViewportMove );
-        }
-        void ModeSheer() {
-            this->SetMode( EM_BrushSheer );
-        }
-        void ModeScale() {
-            this->SetMode( EM_BrushScale );
-        }
-        void ModeStretch() {
-            this->SetMode( EM_BrushStretch );
-        }
-        void ModeSnapScale() {
-            this->SetMode( EM_BrushSnap );
-        }
-        void ModeRotate() {
-            this->SetMode( EM_BrushRotate );
-        }
-        void ModeVertexEdit() {
-            this->SetMode( EM_VertexEdit );
-        }
-        void ModeBrushClip() {
-            this->SetMode( EM_BrushClip );
-        }
-        void ModeTexturePan() {
-            this->SetMode( EM_TexturePan );
-        }
-        void ModeTextureRotate() {
-            this->SetMode( EM_TextureRotate );
-        }
-#endif
+        void MoveBrushHere();
+
+        void ResetPoly();
+
+        void TessellatePoly();
+
+        void PasteAtClickPosition();
+
+        void TextureAlignFloor();
+
+        void TextureAlignWallDirection();
+
+        void TextureAlignWallPanning();
+
+        void TextureAlignWallX();
+
+        void TextureAlignWallY();
+
+        void TextureAlignWallXY();
+
+        void TextureAlignCylinder();
+
+        void TextureAlignAuto();
+
+        void TextureAlignOneTile();
+
+        void TextureAlignOneTileU();
+
+        void TextureAlignOneTileV();
+
+        void TextureUnalign();
+
+        void PolySelectAll();
+
+        void PolySelectMatchingZones();
+
+        void PolySelectMatchingGroups();
+
+        void PolySelectMatchingItems();
+
+        void PolySelectMatchingBrush();
+
+        void PolySelectMatchingTexture();
+
+        void PolySelectMatchingPolyFlags();
+
+        void PolySelectAllAdjacent();
+
+        void PolySelectAdjacentCoplanars();
+
+        void PolySelectAdjacentWalls();
+
+        void PolySelectAdjacentFloors();
+
+        void PolySelectAdjacentSlants();
+
+        void PolySelectReverse();
+
+        void PolyMemorizeSet();
+
+        void PolyMemorizeRecall();
+
+        void PolyMemorizeOr();
+
+        void PolyMemorizeAnd();
+
+        void PolyMemorizeXor();
+
         /*
          * Clip Commands
          */
@@ -124,6 +160,9 @@ namespace Services {
         void ActorSelectAll();
         void ActorSelectInvert();
         void ActorShowAll();
+
+        void SelectNone();
+
         void CameraSpeed(int nSpeed);
         void CameraAlign();
 
@@ -145,6 +184,12 @@ namespace Services {
         // Actor Commands
 
         void AddLightHere();
+
+        void AddPlayerStart();
+
+        void AddCurrentActor();
+
+        void AddActorHere(const QString &actor);
 
         // Brushes
 

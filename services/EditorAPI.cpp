@@ -165,6 +165,10 @@ void Services::EditorAPI::ActorShowAll() {
     this->ExecCommand("ACTOR UNHIDE ALL");
 }
 
+void Services::EditorAPI::SelectNone() {
+    this->ExecCommand("SELECT NONE");
+}
+
 void Services::EditorAPI::CameraSpeed(int nSpeed) {
     QString sCommand = "MODE SPEED=";
     sCommand += std::to_string(nSpeed).c_str();
@@ -232,7 +236,19 @@ int Services::EditorAPI::GetCameraSpeed() {
 }
 
 void Services::EditorAPI::AddLightHere() {
-    this->ExecCommand("ACTOR ADD CLASS=ENGINE.LIGHT");
+    this->AddActorHere("ENGINE.LIGHT");
+}
+
+void Services::EditorAPI::AddPlayerStart() {
+    this->AddActorHere("ENGINE.PLAYERSTART");
+}
+
+void Services::EditorAPI::AddCurrentActor() {
+    this->AddActorHere(QString::fromWCharArray(*FObjectPathName(GEditor->CurrentClass)));
+}
+
+void Services::EditorAPI::AddActorHere(const QString &actor ) {
+    this->ExecCommand(QString("ACTOR ADD CLASS=%1").arg(actor));
     this->ExecCommand("POLY SELECT NONE");
 }
 
@@ -492,4 +508,149 @@ void Services::EditorAPI::SetMode(Helpers::EditorModes mode) {
     API_IS_AVAILABLE;
 
     GEditor->edcamSetMode(mode);
+}
+
+void Services::EditorAPI::MoveBrushHere() {
+    API_IS_AVAILABLE;
+    // TODO: Confirm what this actually does and if its working as intended
+    if (GEditor && GEditor->Level && GEditor->Level->Brush())
+    {
+        FVector Location  = GEditor->ClickLocation;
+        GEditor->Constraints.Snap( Location, FVector(0, 0, 0) );
+        GEditor->Level->Brush()->Location = Location;
+        GEditor->RedrawLevel(GEditor->Level);
+    }
+}
+
+void Services::EditorAPI::ResetPoly() {
+    this->ExecCommand("POLY RESET");
+}
+
+void Services::EditorAPI::TessellatePoly() {
+    this->ExecCommand("POLY TESSELLATE");
+}
+
+void Services::EditorAPI::PasteAtClickPosition() {
+    this->ExecCommand("EDIT PASTEPOS");
+}
+
+// Align Selected
+void Services::EditorAPI::TextureAlignFloor() {
+    this->ExecCommand("POLY TEXALIGN FLOOR");
+}
+
+void Services::EditorAPI::TextureAlignWallDirection() {
+    this->ExecCommand("POLY TEXALIGN WALLDIR");
+}
+
+void Services::EditorAPI::TextureAlignWallPanning() {
+    this->ExecCommand("POLY TEXALIGN WALLPAN");
+}
+
+void Services::EditorAPI::TextureAlignWallX() {
+    this->ExecCommand("POLY TEXALIGN WALLX");
+}
+
+void Services::EditorAPI::TextureAlignWallY() {
+    this->ExecCommand("POLY TEXALIGN WALLY");
+}
+
+void Services::EditorAPI::TextureAlignWallXY() {
+    this->ExecCommand("POLY TEXALIGN WALLS");
+}
+
+void Services::EditorAPI::TextureAlignCylinder() {
+    this->ExecCommand("POLY TEXALIGN WALLCOLUMN");
+}
+
+void Services::EditorAPI::TextureAlignAuto() {
+    this->ExecCommand("POLY TEXALIGN AUTO");
+}
+
+void Services::EditorAPI::TextureAlignOneTile() {
+    this->ExecCommand("POLY TEXALIGN ONETILE");
+}
+
+void Services::EditorAPI::TextureAlignOneTileU() {
+    this->ExecCommand("POLY TEXALIGN ONETILE U");
+}
+
+void Services::EditorAPI::TextureAlignOneTileV() {
+    this->ExecCommand("POLY TEXALIGN ONETILE V");
+}
+
+void Services::EditorAPI::TextureUnalign() {
+    this->ExecCommand("POLY TEXALIGN DEFAULT");
+}
+
+void Services::EditorAPI::PolySelectAll() {
+    this->ExecCommand("POLY SELECT ALL");
+}
+
+void Services::EditorAPI::PolySelectMatchingZones() {
+    this->ExecCommand("POLY SELECT ZONE");
+}
+
+void Services::EditorAPI::PolySelectMatchingGroups() {
+    this->ExecCommand("POLY SELECT MATCHING GROUPS");
+}
+
+void Services::EditorAPI::PolySelectMatchingItems() {
+    this->ExecCommand("POLY SELECT MATCHING ITEMS");
+}
+
+void Services::EditorAPI::PolySelectMatchingBrush() {
+    this->ExecCommand("POLY SELECT MATCHING BRUSH");
+}
+
+void Services::EditorAPI::PolySelectMatchingTexture() {
+    this->ExecCommand("POLY SELECT MATCHING TEXTURE");
+}
+
+void Services::EditorAPI::PolySelectMatchingPolyFlags() {
+    this->ExecCommand("POLY SELECT MATCHING POLYFLAGS");
+}
+
+void Services::EditorAPI::PolySelectAllAdjacent() {
+    this->ExecCommand("POLY SELECT ADJACENT ALL");
+}
+
+void Services::EditorAPI::PolySelectAdjacentCoplanars() {
+    this->ExecCommand("POLY SELECT ADJACENT COPLANARS");
+}
+
+void Services::EditorAPI::PolySelectAdjacentWalls() {
+    this->ExecCommand("POLY SELECT ADJACENT WALLS");
+}
+
+void Services::EditorAPI::PolySelectAdjacentFloors() {
+    this->ExecCommand("POLY SELECT ADJACENT FLOORS");
+}
+
+void Services::EditorAPI::PolySelectAdjacentSlants() {
+    this->ExecCommand("POLY SELECT ADJACENT SLANTS");
+}
+
+void Services::EditorAPI::PolySelectReverse() {
+    this->ExecCommand("POLY SELECT REVERSE");
+}
+
+void Services::EditorAPI::PolyMemorizeSet() {
+    this->ExecCommand("POLY SELECT MEMORY SET");
+}
+
+void Services::EditorAPI::PolyMemorizeRecall() {
+    this->ExecCommand("POLY SELECT MEMORY RECALL");
+}
+
+void Services::EditorAPI::PolyMemorizeOr() {
+    this->ExecCommand("POLY SELECT MEMORY INTERSECT");
+}
+
+void Services::EditorAPI::PolyMemorizeAnd() {
+    this->ExecCommand("POLY SELECT MEMORY UNION");
+}
+
+void Services::EditorAPI::PolyMemorizeXor() {
+    this->ExecCommand("POLY SELECT MEMORY XOR");
 }
