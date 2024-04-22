@@ -131,6 +131,44 @@ namespace Services {
 
         void PolyMemorizeXor();
 
+        void SendToFirst();
+
+        void SendToLast();
+
+        void ActorToBrush();
+
+        void ActorFromBrush();
+
+        void ActorMerge();
+
+        void ActorSeparate();
+
+        void SnapToGrid();
+
+        void ActorMakeSolid();
+
+        void ActorMakeSemiSolid();
+
+        void ActorMakeNonSolid();
+
+        void ActorMakeAdditive();
+
+        void ActorMakeSubtractive();
+
+        void BrushSelectAdd();
+
+        void BrushSelectSubtract();
+
+        void BrushSelectSemiSolid();
+
+        void BrushSelectNonSolids();
+
+        QString GetCurrentClassName();
+
+        void ActorReplaceClass();
+
+        void ActorReplaceClassKeepValues();
+
         /*
          * Clip Commands
          */
@@ -160,6 +198,32 @@ namespace Services {
         void ActorSelectAll();
         void ActorSelectInvert();
         void ActorShowAll();
+
+        void ActorAlign();
+
+        void ActorShowPolys();
+
+        void ActorKeyframeNum(int keyFrameNum);
+
+        void ActorResetOrigin();
+
+        void ActorResetPivot();
+
+        void ActorResetRotation();
+
+        void ActorResetScale();
+
+        void ActorResetPolyFlags();
+
+        void ActorResetAll();
+
+        void ActorMirrorX();
+
+        void ActorMirrorY();
+
+        void ActorMirrorZ();
+
+        void ActorApplyTransform();
 
         void SelectNone();
 

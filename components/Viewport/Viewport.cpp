@@ -227,14 +227,101 @@ void Viewport::Init() {
 
 
 void Viewport::OpenActorMenu() {
-    QMenu menu("PopUp Menu");
-    menu.addAction(QString("Actor Properties"));
+    QMenu moversMenu("&Movers");
+    moversMenu.addAction("&Show Polys", [=] { g_pEditorAPI->ActorShowPolys(); });
+    moversMenu.addSeparator();
+    moversMenu.addAction("Key &0 (Base)", [=] { g_pEditorAPI->ActorKeyframeNum(0); });
+    moversMenu.addAction("Key &1", [=] { g_pEditorAPI->ActorKeyframeNum(1); });
+    moversMenu.addAction("Key &2", [=] { g_pEditorAPI->ActorKeyframeNum(2); });
+    moversMenu.addAction("Key &3", [=] { g_pEditorAPI->ActorKeyframeNum(3); });
+    moversMenu.addAction("Key &4", [=] { g_pEditorAPI->ActorKeyframeNum(4); });
+    moversMenu.addAction("Key &5", [=] { g_pEditorAPI->ActorKeyframeNum(5); });
+    moversMenu.addAction("Key &6", [=] { g_pEditorAPI->ActorKeyframeNum(6); });
+    moversMenu.addAction("Key &7", [=] { g_pEditorAPI->ActorKeyframeNum(7); });
+
+    QMenu resetMenu("&Reset");
+    resetMenu.addAction("&Move To Origin", [=] { g_pEditorAPI->ActorResetOrigin(); });
+    resetMenu.addAction("Reset &Pivot", [=] { g_pEditorAPI->ActorResetPivot(); });
+    resetMenu.addAction("Reset &Rotation", [=] { g_pEditorAPI->ActorResetRotation(); });
+    resetMenu.addAction("Reset &Scaling", [=] { g_pEditorAPI->ActorResetScale(); });
+    resetMenu.addAction("Reset Poly&flags", [=] { g_pEditorAPI->ActorResetPolyFlags(); });
+    resetMenu.addAction("&Reset All", [=] { g_pEditorAPI->ActorResetAll(); });
+
+    QMenu transformMenu("&Transform");
+    transformMenu.addAction("Mirror About &X", [=] { g_pEditorAPI->ActorMirrorX(); });
+    transformMenu.addAction("Mirror About &Y", [=] { g_pEditorAPI->ActorMirrorY(); });
+    transformMenu.addAction("Mirror About &Z (Vertical)", [=] { g_pEditorAPI->ActorMirrorZ(); });
+    transformMenu.addAction("&Transform Permanently", [=] { g_pEditorAPI->ActorApplyTransform(); });
+
+    QMenu orderMenu("&Order");
+    orderMenu.addAction("To &First", [=] { g_pEditorAPI->SendToFirst(); });
+    orderMenu.addAction("To &Last", [=] { g_pEditorAPI->SendToLast(); });
+
+    QMenu polygonMenu("&Polygons");
+    polygonMenu.addAction("&To Brush", [=] { g_pEditorAPI->ActorToBrush(); });
+    polygonMenu.addAction("&From Brush", [=] { g_pEditorAPI->ActorFromBrush(); });
+    polygonMenu.addSeparator();
+    polygonMenu.addAction("&Merge", [=] { g_pEditorAPI->ActorMerge(); });
+    polygonMenu.addAction("&Separate", [=] { g_pEditorAPI->ActorSeparate(); });
+    polygonMenu.addSeparator();
+    polygonMenu.addAction("Snap vertices to &Grid",[=] { g_pEditorAPI->SnapToGrid(); });
+
+    QMenu solidMenu("&Solidity");
+    solidMenu.addAction("&Solid", [=] { g_pEditorAPI->ActorMakeSolid(); });
+    solidMenu.addAction("S&emisolid", [=] { g_pEditorAPI->ActorMakeSemiSolid(); });
+    solidMenu.addAction("&Nonsolid", [=] { g_pEditorAPI->ActorMakeNonSolid(); });
+
+    QMenu csgMenu("&CSG");
+    csgMenu.addAction("&Additive", [=] { g_pEditorAPI->ActorMakeAdditive(); });
+    csgMenu.addAction("&Subtractive", [=] { g_pEditorAPI->ActorMakeSubtractive(); });
+
+    QMenu brushMenu("Select &Brushes");
+    brushMenu.addAction("&Adds", [=] { g_pEditorAPI->BrushSelectAdd(); });
+    brushMenu.addAction("&Subtracts", [=] { g_pEditorAPI->BrushSelectSubtract(); });
+    brushMenu.addAction("&Semisolids", [=] { g_pEditorAPI->BrushSelectSemiSolid(); });
+    brushMenu.addAction("&Nonsolids", [=] { g_pEditorAPI->BrushSelectNonSolids(); });
+
+    QMenu replaceMenu("&Replace...");
+    replaceMenu.addAction(QString("&Replace with %1").arg(g_pEditorAPI->GetCurrentClassName()), [=] { g_pEditorAPI->ActorReplaceClass(); });
+    replaceMenu.addAction(QString("Replace with %1 (keep &values)").arg(g_pEditorAPI->GetCurrentClassName()), [=] { g_pEditorAPI->ActorReplaceClassKeepValues(); });
+
+    QMenu menu("Actor Menu");
+    menu.addAction(QString("Actor &Properties (%1 Selected)"));
     menu.addSeparator();
     menu.addAction("Add light here", [=] {
         g_pEditorAPI->AddLightHere();
     });
     menu.addSeparator();
-    menu.addAction("Etc...");
+    if (g_pEditorAPI->HasBrowserClassSelected())
+    {
+        menu.addAction(QString("Add %1 Here").arg(g_pEditorAPI->GetCurrentClassName()), [=] {
+            g_pEditorAPI->AddCurrentActor();
+        });
+    }
+    menu.addAction("Add &Light Here", [=] {
+        g_pEditorAPI->AddLightHere();
+    });
+    menu.addAction("&Move Brush Here", [=] {
+        g_pEditorAPI->MoveBrushHere();
+    });
+    menu.addAction("&Actor Align to Grid", [=] { g_pEditorAPI->ActorAlign(); });
+    menu.addMenu(&moversMenu);
+    menu.addMenu(&resetMenu);
+    menu.addMenu(&transformMenu);
+    menu.addMenu(&orderMenu);
+    menu.addMenu(&polygonMenu);
+    menu.addMenu(&solidMenu);
+    menu.addMenu(&csgMenu);
+    menu.addSeparator();
+    //...
+    menu.addMenu(&brushMenu);
+    //...
+    menu.addSeparator();
+    //...
+    menu.addSeparator();
+    menu.addMenu(&replaceMenu);
+    //...
+
     menu.exec(QCursor::pos());
 }
 
@@ -284,7 +371,7 @@ void Viewport::OpenSurfaceMenu() {
     menu.addSeparator();
     if (g_pEditorAPI->HasBrowserClassSelected())
     {
-        menu.addAction("Add Class Here", [=] {
+        menu.addAction(QString("Add %1 Here").arg(g_pEditorAPI->GetCurrentClassName()), [=] {
             g_pEditorAPI->AddCurrentActor();
         });
     }

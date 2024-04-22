@@ -165,6 +165,73 @@ void Services::EditorAPI::ActorShowAll() {
     this->ExecCommand("ACTOR UNHIDE ALL");
 }
 
+void Services::EditorAPI::ActorAlign() {
+    this->ExecCommand("ACTOR ALIGN");
+}
+
+void Services::EditorAPI::ActorShowPolys() {
+    for( INT i=0; i<GEditor->Level->Actors.Num(); i++ )
+    {
+        ABrush* Brush = Cast<ABrush>(GEditor->Level->Actors(i));
+        if( Brush && Brush->IsMovingBrush() && Brush->bSelected )
+        {
+            Brush->Brush->EmptyModel( 1, 0 );
+            Brush->Brush->BuildBound();
+            GEditor->bspBuild( Brush->Brush, BSP_Good, 15, 1, 0 );
+            GEditor->bspRefresh( Brush->Brush, 1 );
+            GEditor->bspValidateBrush( Brush->Brush, 1, 1 );
+            GEditor->bspBuildBounds( Brush->Brush );
+
+            GEditor->bspBrushCSG( Brush, GEditor->Level->Model, 0, CSG_Add, 1 );
+        }
+    }
+    GEditor->RedrawLevel( GEditor->Level );
+}
+
+void Services::EditorAPI::ActorKeyframeNum(int keyFrameNum) {
+    this->ExecCommand(QString("ACTOR KEYFRAME NUM=%1").arg(keyFrameNum));
+}
+
+void Services::EditorAPI::ActorResetOrigin() {
+    this->ExecCommand("ACTOR RESET LOCATION");
+}
+
+void Services::EditorAPI::ActorResetPivot() {
+    this->ExecCommand("ACTOR RESET PIVOT");
+}
+
+void Services::EditorAPI::ActorResetRotation() {
+    this->ExecCommand("ACTOR RESET ROTATION");
+}
+
+void Services::EditorAPI::ActorResetScale() {
+    this->ExecCommand("ACTOR RESET SCALE");
+}
+
+void Services::EditorAPI::ActorResetPolyFlags() {
+    this->ExecCommand("ACTOR RESET POLYFLAGS");
+}
+
+void Services::EditorAPI::ActorResetAll() {
+    this->ExecCommand("ACTOR RESET ALL");
+}
+
+void Services::EditorAPI::ActorMirrorX() {
+    this->ExecCommand("ACTOR MIRROR X=-1");
+}
+
+void Services::EditorAPI::ActorMirrorY() {
+    this->ExecCommand("ACTOR MIRROR Y=-1");
+}
+
+void Services::EditorAPI::ActorMirrorZ() {
+    this->ExecCommand("ACTOR MIRROR Z=-1");
+}
+
+void Services::EditorAPI::ActorApplyTransform() {
+    this->ExecCommand("ACTOR APPLYTRANSFORM");
+}
+
 void Services::EditorAPI::SelectNone() {
     this->ExecCommand("SELECT NONE");
 }
@@ -653,4 +720,109 @@ void Services::EditorAPI::PolyMemorizeAnd() {
 
 void Services::EditorAPI::PolyMemorizeXor() {
     this->ExecCommand("POLY SELECT MEMORY XOR");
+}
+
+void Services::EditorAPI::SendToFirst() {
+    this->ExecCommand("MAP SENDTO FIRST");
+}
+
+void Services::EditorAPI::SendToLast() {
+    this->ExecCommand("MAP SENDTO LAST");
+}
+
+void Services::EditorAPI::ActorToBrush() {
+    this->ExecCommand("MAP BRUSH GET");
+}
+
+void Services::EditorAPI::ActorFromBrush() {
+    this->ExecCommand("MAP BRUSH PUT");
+}
+
+void Services::EditorAPI::ActorMerge() {
+    GWarn->BeginSlowTask( TEXT("Merging Faces"), 1, 0 );
+    for( int i=0; i<GEditor->Level->Actors.Num(); i++ )
+    {
+        GWarn->StatusUpdatef( i, GEditor->Level->Actors.Num(), TEXT("Merging Faces") );
+        AActor* pActor = GEditor->Level->Actors(i);
+        if( pActor && pActor->bSelected && pActor->IsBrush() )
+            GEditor->bspValidateBrush( pActor->Brush, 1, 1 );
+    }
+    GEditor->RedrawLevel( GEditor->Level );
+    GWarn->EndSlowTask();
+}
+
+void Services::EditorAPI::ActorSeparate() {
+    GWarn->BeginSlowTask( TEXT("Separating Faces"), 1, 0 );
+    for( int i=0; i<GEditor->Level->Actors.Num(); i++ )
+    {
+        GWarn->StatusUpdatef( i, GEditor->Level->Actors.Num(), TEXT("Separating Faces") );
+        AActor* pActor = GEditor->Level->Actors(i);
+        if( pActor && pActor->bSelected && pActor->IsBrush() )
+            GEditor->bspUnlinkPolys( pActor->Brush );
+    }
+    GEditor->RedrawLevel( GEditor->Level );
+    GWarn->EndSlowTask();
+}
+
+void Services::EditorAPI::SnapToGrid() {
+    this->ExecCommand("ACTOR SNAPTOGRID");
+}
+
+void Services::EditorAPI::ActorMakeSolid() {
+    this->ExecCommand(QString("MAP SETBRUSH CLEARFLAGS=%1 SETFLAGS=%2").arg(PF_Semisolid + PF_NotSolid, 0));
+}
+
+void Services::EditorAPI::ActorMakeSemiSolid() {
+    this->ExecCommand(QString("MAP SETBRUSH CLEARFLAGS=%1 SETFLAGS=%2").arg(PF_Semisolid + PF_NotSolid, PF_Semisolid));
+}
+
+void Services::EditorAPI::ActorMakeNonSolid() {
+    this->ExecCommand(QString("MAP SETBRUSH CLEARFLAGS=%1 SETFLAGS=%2").arg(PF_Semisolid + PF_NotSolid, PF_NotSolid));
+}
+
+void Services::EditorAPI::ActorMakeAdditive() {
+    this->ExecCommand(QString("MAP SETBRUSH CSGOPER=%1").arg(CSG_Add));
+}
+
+void Services::EditorAPI::ActorMakeSubtractive() {
+    this->ExecCommand(QString("MAP SETBRUSH CSGOPER=%1").arg(CSG_Subtract));
+}
+
+void Services::EditorAPI::BrushSelectAdd() {
+    this->ExecCommand("MAP SELECT ADDS");
+}
+
+void Services::EditorAPI::BrushSelectSubtract() {
+    this->ExecCommand("MAP SELECT SUBTRACTS");
+}
+
+void Services::EditorAPI::BrushSelectSemiSolid() {
+    this->ExecCommand("MAP SELECT SEMISOLIDS");
+}
+
+void Services::EditorAPI::BrushSelectNonSolids() {
+    this->ExecCommand("MAP SELECT NONSOLIDS");
+}
+
+QString Services::EditorAPI::GetCurrentClassName() {
+    if (!GEditor->CurrentClass) {
+        return "...";
+    }
+    return QString::fromWCharArray(*FObjectPathName(GEditor->CurrentClass));
+}
+
+void Services::EditorAPI::ActorReplaceClass() {
+    if (!GEditor->CurrentClass) {
+        return;
+    }
+
+    this->ExecCommand(QString("ACTOR REPLACE CLASS=%1").arg(this->GetCurrentClassName()));
+}
+
+void Services::EditorAPI::ActorReplaceClassKeepValues() {
+    if (!GEditor->CurrentClass) {
+        return;
+    }
+
+    this->ExecCommand(QString("ACTOR REPLACE CLASS=%1 KEEP=1").arg(this->GetCurrentClassName()));
 }
