@@ -313,15 +313,31 @@ void Viewport::OpenActorMenu() {
     menu.addMenu(&solidMenu);
     menu.addMenu(&csgMenu);
     menu.addSeparator();
-    //...
+
+    menu.addAction(QString("&Select All %1 Actors").arg(g_pEditorAPI->GetCurrentClassName()), [=] { g_pEditorAPI->ActorSelectAllOfClass(); });
+    menu.addAction("&Select All Matching Meshes", [=] { g_pEditorAPI->ActorSelectMatching(); });
+    menu.addAction("Select &All", [=] { g_pEditorAPI->ActorSelectAll(); });
+    menu.addAction("Select &Invert", [=] { g_pEditorAPI->ActorSelectInvert(); });
+    menu.addAction("Select &None", [=] { g_pEditorAPI->SelectNone(); });
     menu.addMenu(&brushMenu);
-    //...
+    menu.addAction("Select &Inside", [=] { g_pEditorAPI->ActorSelectInside(); });
     menu.addSeparator();
-    //...
+    menu.addAction("Hide Selected Actors", [=] { g_pEditorAPI->ActorHideSelected(); });
+    menu.addAction("Show Selected Actors Only", [=] { g_pEditorAPI->ActorShowSelected(); });
+    menu.addAction("Invert Hidden Actors View", [=] { g_pEditorAPI->ActorHideInvert(); });
+    menu.addAction("Show All (Hidden) Actors", [=] { g_pEditorAPI->ActorShowAll(); });
     menu.addSeparator();
     menu.addMenu(&replaceMenu);
-    //...
-
+    menu.addAction("D&uplicate", [=] { g_pEditorAPI->ActorDuplicate(); });
+    menu.addAction("&Delete", [=] { g_pEditorAPI->ActorDelete(); });
+    // We don't have a script editor (and I don't really want one!)
+    //menu.addAction("&Edit Script", [=] { });
+    menu.addAction("&Make Current", [=] { g_pEditorAPI->MakeActorCurrent(); });
+    menu.addSeparator();
+    menu.addAction("Cut Actor", [=] { g_pEditorAPI->EditCut(); });
+    menu.addAction("Copy Actor", [=] { g_pEditorAPI->EditCopy(); });
+    menu.addSeparator();
+    menu.addAction("Paste Actor at &Click Location", [=] { g_pEditorAPI->PasteAtClickPosition(); });
     menu.exec(QCursor::pos());
 }
 

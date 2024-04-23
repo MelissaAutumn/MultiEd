@@ -169,6 +169,22 @@ namespace Services {
 
         void ActorReplaceClassKeepValues();
 
+        void ActorSelectAllOfClass();
+
+        void ActorSelectMatching();
+
+        void ActorDuplicate();
+
+        void ActorDelete();
+
+        void MakeActorCurrent();
+
+        void EditCut();
+
+        void EditCopy();
+
+        void EditPaste();
+
         /*
          * Clip Commands
          */
@@ -194,6 +210,9 @@ namespace Services {
          */
         void ActorShowSelected();
         void ActorHideSelected();
+
+        void ActorHideInvert();
+
         void ActorSelectInside();
         void ActorSelectAll();
         void ActorSelectInvert();

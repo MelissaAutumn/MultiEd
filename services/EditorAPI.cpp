@@ -87,6 +87,7 @@ bool Services::EditorAPI::LogExec(const QString &sCommand) {
 }
 
 void Services::EditorAPI::RedrawLevel() {
+    API_IS_AVAILABLE;
     GEditor->RedrawLevel(GEditor->Level);
 }
 
@@ -143,10 +144,15 @@ void Services::EditorAPI::BrushAddMover() {
 void Services::EditorAPI::ActorShowSelected() {
     // TODO: This might be wrong?
     this->ExecCommand("ACTOR HIDE UNSELECTED");
+    this->RedrawLevel();
 }
 
 void Services::EditorAPI::ActorHideSelected() {
     this->ExecCommand("ACTOR HIDE SELECTED");
+}
+
+void Services::EditorAPI::ActorHideInvert() {
+    this->ExecCommand("ACTOR HIDE INVERT");
 }
 
 void Services::EditorAPI::ActorSelectInside() {
@@ -825,4 +831,62 @@ void Services::EditorAPI::ActorReplaceClassKeepValues() {
     }
 
     this->ExecCommand(QString("ACTOR REPLACE CLASS=%1 KEEP=1").arg(this->GetCurrentClassName()));
+}
+
+void Services::EditorAPI::ActorSelectAllOfClass() {
+    if (!GEditor->CurrentClass) {
+        return;
+    }
+
+    this->ExecCommand(QString("ACTOR SELECT OFCLASS CLASS=%1").arg(this->GetCurrentClassName()));
+}
+
+void Services::EditorAPI::ActorSelectMatching() {
+    this->ExecCommand("ACTOR SELECT MATCHING");
+}
+
+void Services::EditorAPI::ActorDuplicate() {
+    this->ExecCommand("ACTOR DUPLICATE");
+}
+
+void Services::EditorAPI::ActorDelete() {
+    this->ExecCommand("ACTOR DELETE");
+}
+
+void Services::EditorAPI::MakeActorCurrent() {
+    API_IS_AVAILABLE;
+    if (m_selectionData.empty())
+    {
+        return;
+    }
+
+    auto lastSelection = m_selectionData[m_selectionData.size()-1];
+
+    if (lastSelection.type != SelectedType::ST_ACTOR)
+    {
+        return;
+    }
+
+    QString className = QString::fromWCharArray(*FObjectPathName(GEditor->Level->Actors(lastSelection.index)->GetClass()));
+
+    this->ExecCommand(QString("SETCURRENTCLASS CLASS=%1").arg(className));
+
+    if (GEditor->CurrentClass)
+    {
+        QString classNiceName = QString::fromWCharArray(GEditor->CurrentClass->GetName());
+        qInfo() << "Current Actor " << lastSelection.index << classNiceName;
+    }
+
+}
+
+void Services::EditorAPI::EditCut() {
+    this->ExecCommand("EDIT CUT");
+}
+
+void Services::EditorAPI::EditCopy() {
+    this->ExecCommand("EDIT COPY");
+}
+
+void Services::EditorAPI::EditPaste() {
+    this->ExecCommand("EDIT PASTE");
 }
