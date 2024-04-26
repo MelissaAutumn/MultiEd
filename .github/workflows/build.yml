@@ -37,7 +37,7 @@ jobs:
     - name: Run CMake
       run: |
         cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B ./cmake-build-debug-clang
-        cmake --build ./cmake-build-debug-clang
+        cmake --build ./cmake-build-debug-clang --target MultiEd
 
     - uses: actions/upload-artifact@v4
       with:

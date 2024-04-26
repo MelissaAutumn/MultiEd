@@ -6,7 +6,7 @@
 		* Created by Stijn Volckaert
 =============================================================================*/
 
-#include "Core.h"
+#include "../../libs/OldUnrealSDK/Core/Inc/Core.h"
 
 //
 // SDL output device.

@@ -42,7 +42,10 @@ int main(int argc, char* argv[])
     g_pUnreal->Boot(argc, argv);
 
 #ifdef COMPILE_WITH_QT
-    auto* pMainWindow = new Components::MultiEdWindow();
+    auto windowIcon = QIcon("../Help/UnrealEd.ico");
+    a.setWindowIcon(windowIcon);
+
+    auto* pMainWindow = new Components::MultiEdWindow();;
     pMainWindow->Init();
 
     // centre on screen
