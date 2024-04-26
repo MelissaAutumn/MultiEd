@@ -2,7 +2,12 @@
 // Created by melissaa on 26/04/24.
 //
 
+#include <QApplication>
+#include <QIcon>
+#include <QMainWindow>
+
 #include <Core.h>
+
 
 #define LAUNCH_NAME TEXT("QT6Launch")
 #define LAUNCH_NAME_LOG TEXT("QT6Launch.log")
@@ -16,17 +21,29 @@ extern "C" { const TCHAR *GPackage = GPackageInternal; }
 
 int main(int argc, char* argv[])
 {
-    if (const auto engine = UnrealLaunch::Boot(argc, argv, "QT6Launch"))
+    QApplication a(argc, argv);
+    auto windowIcon = QIcon("../Help/Unreal.ico");
+    a.setWindowIcon(windowIcon);
+
+    auto unrealLaunch = new UnrealLaunch();
+
+    if (const auto engine = unrealLaunch->Boot(argc, argv, "QT6Launch"))
     {
         // Start main engine loop.
         debugf( TEXT("Entering main loop.") );
         while ( !GIsRequestingExit ) {
-            if(!UnrealLaunch::Loop( engine )) {
+            // Process QT Events
+            qApp->processEvents();
+
+            // Process UE Events
+            if(!unrealLaunch->Loop( engine )) {
                 GIsRequestingExit = TRUE;
                 break;
             }
         }
     }
+
+    delete unrealLaunch;
 
     return 0;
 }

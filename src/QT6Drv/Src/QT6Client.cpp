@@ -13,6 +13,7 @@ IMPLEMENT_CLASS(UQT6Client);
 UQT6Client::UQT6Client()
 {
 	guard(USDLClient::USDLClient);
+	StartupFullscreen = FALSE;
 	unguard;
 }
 

@@ -9,6 +9,8 @@
 
 class LogWindow : public FOutputDevice {
 public:
+    virtual ~LogWindow() = default;
+
     FOutputDevice           *AuxOut;
     Components::qtLogWindow *LogWin;
     UBOOL ShowLog;

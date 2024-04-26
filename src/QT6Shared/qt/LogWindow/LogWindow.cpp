@@ -44,7 +44,7 @@ void Components::qtLogWindow::Log(const QString &qString) {
 }
 
 void Components::qtLogWindow::Log(const FString &fString) {
-
+    this->Log(QString::fromWCharArray(*fString));
 }
 
 void Components::qtLogWindow::Show() {

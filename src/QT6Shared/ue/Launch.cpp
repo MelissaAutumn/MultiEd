@@ -9,6 +9,7 @@
 
 // Memory allocator.
 #include "FMallocAnsi.h"
+#include "LogWindow.h"
 
 FMallocAnsi Malloc;
 
@@ -75,6 +76,14 @@ extern FString GMapExt;
 EDITOR_API FString GMapExt;
 #endif
 
+
+UnrealLaunch::UnrealLaunch() {
+    m_LogWindow = nullptr;
+}
+
+UnrealLaunch::~UnrealLaunch() {
+    delete m_LogWindow;
+}
 
 /**
  * Boot UE similar to how SDLLaunch might.
@@ -145,16 +154,14 @@ UEngine *UnrealLaunch::Boot(int argc, char **argv, const char* moduleName) {
                 GIsGuarded		= 1;
                 appInit(ANSI_TO_TCHAR(moduleName), *CmdLine, &Malloc, &Log, &Error, &Warn, &FileManager, FConfigCacheIni::Factory, 1);
 
-#if 0
                 {
                     // Init Logger
-                    g_LogWindow = LogWindow();
-                    g_LogWindow.LogWin = new Components::qtLogWindow();
-                    g_LogWindow.LogWin->Show();
-                    g_LogWindow.AuxOut = GLog;
-                    GLog = &g_LogWindow;
+                    m_LogWindow = new LogWindow();
+                    m_LogWindow->LogWin = new Components::qtLogWindow();
+                    m_LogWindow->LogWin->Show();
+                    m_LogWindow->AuxOut = GLog;
+                    GLog = m_LogWindow;
                 }
-#endif
 
                 // Check various config settings
                 {

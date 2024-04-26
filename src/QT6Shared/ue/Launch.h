@@ -5,6 +5,8 @@
 #ifndef LAUNCH_H
 #define LAUNCH_H
 
+class LogWindow;
+class QApplication;
 class UEngine;
 
 #ifndef EDITOR_API
@@ -14,12 +16,16 @@ class UEngine;
 // Keeping things a little organized
 class UnrealLaunch {
 public:
+    UnrealLaunch();
+    virtual ~UnrealLaunch();
 
-    static UEngine *Boot(int argc, char *argv[], const char* moduleName);
-    static bool Loop(UEngine* engine);
+    UEngine *Boot(int argc, char *argv[], const char* moduleName);
+    bool Loop(UEngine* engine);
+
+    LogWindow* m_LogWindow;
 
 private:
-    static UEngine* InitEngine();
+    UEngine* InitEngine();
 };
 
 #endif //LAUNCH_H
