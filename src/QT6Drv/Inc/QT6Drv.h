@@ -27,7 +27,10 @@ class UQT6Client : public UClient, public FNotifyHook {
 
     // Constructors.
     UQT6Client();
+
     void StaticConstructor();
+
+    void Destroy() override;
 
     // FNotifyHook interface.
     void NotifyDestroy( void* Src );

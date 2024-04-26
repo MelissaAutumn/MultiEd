@@ -43,6 +43,14 @@ void UQT6Client::StaticConstructor()
 	unguard;
 }
 
+void UQT6Client::Destroy() {
+	UClient::Destroy();
+}
+
+void UQT6Client::NotifyDestroy(void *Src) {
+	FNotifyHook::NotifyDestroy(Src);
+}
+
 void UQT6Client::Init(UEngine *InEngine) {
 	guard(USDLClient::USDLClient);
 
@@ -58,4 +66,48 @@ void UQT6Client::Init(UEngine *InEngine) {
 	debugf( NAME_Init, TEXT("QT6Client initialized.") );
 
 	unguard;
+}
+
+void UQT6Client::ShowViewportWindows(DWORD ShowFlags, int DoShow) {
+
+}
+
+void UQT6Client::EnableViewportWindows(DWORD ShowFlags, int DoEnable) {
+}
+
+void UQT6Client::Tick() {
+}
+
+UBOOL UQT6Client::Exec(const TCHAR *Cmd, FOutputDevice &Ar) {
+}
+
+UViewport * UQT6Client::NewViewport(const FName Name) {
+}
+
+void UQT6Client::MakeCurrent(UViewport *NewViewport) {
+}
+
+UBOOL UQT6Client::SetClipboardText(FString &Text) {
+}
+
+INT UQT6Client::GetDPIScaledX(INT X) {
+}
+
+INT UQT6Client::GetDPIScaledY(INT Y) {
+}
+
+void * UQT6Client::CreateTTFFont(const TCHAR *FontName, int Height, int Italic, int Bold, int Underlined,
+	int AntiAliased) {
+}
+
+void UQT6Client::MakeGlyphsList(FBitmask &RequestedGlyphs, void *InFont, TArray<FGlyphInfo> &OutGlyphs, INT AntiAlias) {
+}
+
+void UQT6Client::RenderGlyph(FGlyphInfo &Info, UTexture *PageTexture, INT X, INT Y, INT YAdjust) {
+}
+
+void UQT6Client::DestroyGlyphsList(TArray<FGlyphInfo> &Glyphs) {
+}
+
+void UQT6Client::DestroyTTFFont(void *Font) {
 }

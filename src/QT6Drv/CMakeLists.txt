@@ -37,6 +37,7 @@ add_library(Engine SHARED IMPORTED)
 add_library(QT6Drv SHARED
         Inc/QT6Drv.h
         Src/QT6Client.cpp
+        Src/QT6Viewport.cpp
         Src/QT6Drv.cpp)
 
 
