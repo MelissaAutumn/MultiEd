@@ -41,4 +41,4 @@ target_link_libraries(QT6Shared
         Engine
 )
 
-set_target_properties(QT6Shared PROPERTIES COMPILE_FLAGS "-fpermissive" LINK_FLAGS "--verbose -Wl,$ORIGIN" OUTPUT_NAME "QT6Shared")
+set_target_properties(QT6Shared PROPERTIES COMPILE_FLAGS "-fpermissive" LINK_FLAGS "--verbose -Wl" OUTPUT_NAME "QT6Shared")
