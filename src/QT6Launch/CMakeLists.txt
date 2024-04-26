@@ -1,29 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(QT6Drv)
-
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-
-# Defines
-if (WIN32)
-    # ???
-else()
-    add_compile_definitions("__LINUX_X86__")
-endif()
-add_compile_definitions("BUILD_64")
-add_compile_definitions("_DEBUG")
-
-# From UTSDK
-add_compile_definitions(UNICODE=1)
-add_compile_definitions(_UNICODE=1)
-add_compile_definitions(_REENTRANT=1)
-add_compile_definitions(HAVE_PRAGMA_PACK=1)
-
-# For UT
-add_compile_definitions(ENGINE_ARCHITECTURE="amd64")
+project(QT6Launch)
 
 find_package(Qt6 COMPONENTS
         Core
@@ -31,14 +7,16 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED)
 
+# Temp until we have QT6Drv working
+find_package(SDL2 REQUIRED)
+
+
 # Setup some links to shared libraries
 add_library(Core SHARED IMPORTED)
 add_library(Engine SHARED IMPORTED)
-add_library(QT6Drv SHARED
-        Inc/QT6Drv.h
-        Src/QT6Client.cpp
-        Src/QT6Drv.cpp)
+add_library(SDLDrv SHARED IMPORTED)
 
+add_executable(QT6Launch Src/main.cpp)
 
 
 if (WIN32)
@@ -47,21 +25,29 @@ if (WIN32)
 else()
     set_target_properties(Core PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/Core.so")
     set_target_properties(Engine PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/Engine.so")
+    set_target_properties(QT6Shared PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/QT6Shared.so")
+    set_target_properties(QT6Drv PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/QT6Drv.so")
+    set_target_properties(SDLDrv PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/SDLDrv.so")
 endif()
 
 # Includes
 target_include_directories(Core INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Core/Inc/")
 target_include_directories(Engine INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Engine/Inc/")
-
+target_include_directories(SDLDrv INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/SDLDrv/Inc/")
+target_include_directories(QT6Drv INTERFACE "${CMAKE_SOURCE_DIR}/src/QT6Drv/Inc")
+target_include_directories(QT6Shared INTERFACE "${CMAKE_SOURCE_DIR}/src/QT6Shared")
 # End
 
-
-target_link_libraries(QT6Drv
+target_link_libraries(QT6Launch
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
         Core
         Engine
+        QT6Shared
+        #QT6Drv
+        SDLDrv
+        SDL2
 )
 
-set_target_properties(QT6Drv PROPERTIES COMPILE_FLAGS "-fpermissive" LINK_FLAGS "--verbose -Wl,$ORIGIN" OUTPUT_NAME "QT6Drv")
+set_target_properties(QT6Launch PROPERTIES COMPILE_FLAGS "-fpermissive" LINK_FLAGS "--verbose -Wl,-rpath,$ORIGIN" OUTPUT_NAME "QT6Launch")

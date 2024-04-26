@@ -1,30 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 project(MultiEd)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-
-# Defines
-if (WIN32)
-# ???
-else()
-add_compile_definitions("__LINUX_X86__")
-endif()
-add_compile_definitions("BUILD_64")
-add_compile_definitions("_DEBUG")
-
-# From UTSDK
-add_compile_definitions(UNICODE=1)
-add_compile_definitions(_UNICODE=1)
-add_compile_definitions(_REENTRANT=1)
-add_compile_definitions(HAVE_PRAGMA_PACK=1)
-
-# For UT
-add_compile_definitions(ENGINE_ARCHITECTURE="amd64")
-
 find_package(Qt6 COMPONENTS
         Core
         Gui
@@ -84,8 +60,8 @@ add_executable(MultiEd main.cpp
         components/Preferences/Preferences.cpp
         components/Preferences/Preferences.h
         # From SDLLaunch
-        FFeedbackContextSDL.h
-        FOutputDeviceSDLError.h
+        ../QT6Shared/ue/FFeedbackContextSDL.h
+        ../QT6Shared/ue/FOutputDeviceSDLError.h
         components/Menu/ActorMenu.cpp
         components/Menu/BaseMenu.cpp
         components/Menu/BrushMenu.cpp
@@ -125,6 +101,7 @@ set_target_properties(Engine PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/l
 set_target_properties(Editor PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/Editor.so")
 set_target_properties(ALAudio PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/ALAudio.so")
 set_target_properties(SDLDrv PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/SDLDrv.so")
+set_target_properties(QT6Shared PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64/QT6Shared.so")
 endif()
 
 # Includes
@@ -134,6 +111,7 @@ target_include_directories(Editor INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealS
 target_include_directories(Editor INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/Editor/Src/")  # Do I need this or was this a typo..
 target_include_directories(ALAudio INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/ALAudio/Inc/")
 target_include_directories(SDLDrv INTERFACE "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/SDLDrv/Inc/")
+target_include_directories(QT6Shared INTERFACE "${CMAKE_SOURCE_DIR}/src/QT6Shared")
 
 # End
 
@@ -142,6 +120,7 @@ target_link_libraries(MultiEd
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
+        QT6Shared
         Core
         Engine
         Editor
@@ -150,4 +129,4 @@ target_link_libraries(MultiEd
         SDL2
         )
 
-set_target_properties(MultiEd PROPERTIES COMPILE_FLAGS "-fpermissive" LINK_FLAGS "--verbose -Wl,-rpath,$ORIGIN" OUTPUT_NAME "MultiEd-bin" RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/libs/OldUnrealSDK/System64")
+set_target_properties(MultiEd PROPERTIES COMPILE_FLAGS "-fpermissive" LINK_FLAGS "--verbose -Wl,-rpath,$ORIGIN" OUTPUT_NAME "MultiEd-bin")

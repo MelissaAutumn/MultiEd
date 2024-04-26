@@ -42,12 +42,12 @@ FMallocAnsi Malloc;
 FOutputDeviceFile Log;
 
 // Error handler.
-#include "../FOutputDeviceSDLError.h"
+#include <ue/FOutputDeviceSDLError.h>
 
 FOutputDeviceSDLError Error;
 
 // Feedback.
-#include "../FFeedbackContextSDL.h"
+#include <ue/FFeedbackContextSDL.h>
 
 FFeedbackContextSDL Warn;
 
