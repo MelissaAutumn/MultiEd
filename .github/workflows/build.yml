@@ -45,6 +45,11 @@ jobs:
         name: MultiEd-linux-bin
         path: libs/OldUnrealSDK/System64/MultiEd-bin
 
+    - uses: actions/upload-artifact@v4
+      with:
+        name: QT6Shared.so
+        path: libs/OldUnrealSDK/System64/QT6Shared.so
+
 #  windows:
 #    runs-on: windows-latest
 #
