@@ -3,10 +3,13 @@
 #include "ue/UnrealGlue.h"
 // Components
 #include "components/MultiEdWindow.h"
+#include "ue/Launch.h"
 //#include <SDL2/SDL.h>
 
+// Editor functionality
 UnrealGlue* g_pUnreal = nullptr;
-
+// Game/Shared functionality
+UnrealLaunch* g_UnrealLaunch = nullptr;
 
 // Define to build the qt parts
 // Mainly for debugging the unreal glue
@@ -38,8 +41,12 @@ int main(int argc, char* argv[])
     std::signal(SIGINT, sigHandler);
     std::signal(SIGTERM, sigHandler);
 
-    g_pUnreal = new UnrealGlue(nullptr);
-    g_pUnreal->Boot(argc, argv);
+    g_UnrealLaunch = new UnrealLaunch(true);
+    g_pUnreal = new UnrealGlue();
+
+    // Boot SharedLaunch, and some additional stuff for the editor
+    auto engine = g_UnrealLaunch->Boot(argc, argv, "MultiEd");
+    g_pUnreal->Boot(engine);
 
 #ifdef COMPILE_WITH_QT
     auto windowIcon = QIcon("../Help/UnrealEd.ico");
@@ -86,25 +93,31 @@ int main(int argc, char* argv[])
         qApp->processEvents();
         if (!pMainWindow->isVisible())
         {
-            delete g_pUnreal;
             break;
         }
 #endif
 
-        // Lol this is here now.
         pMainWindow->Update();
 
+        if (!g_pUnreal->HasViewports()) {
+            continue;
+        }
+
         // Unreal loop
-        auto bOkay = g_pUnreal->Loop();
+        auto bOkay = g_UnrealLaunch->Loop(engine);
         if (!bOkay)
         {
             break;
         }
     }
 
+    delete g_pUnreal;
+
 #ifdef COMPILE_WITH_QT
     qApp->exit();
 #endif
+
+    delete g_UnrealLaunch;
 
     return 0;
 }

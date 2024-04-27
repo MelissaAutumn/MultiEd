@@ -24,16 +24,18 @@ class UnrealGlue {
 
 public:
 
-    explicit UnrealGlue(intptr_t* pWinID) {}
+    explicit UnrealGlue(): m_pWindow(nullptr) {}
+    virtual ~UnrealGlue() = default;
 
-    void Boot(int argc, char* argv[]);
-    bool Loop();
+    void Boot(UEngine* engine);
     void InitBrushBuilders();
 
     void BeforeMapLoad();
     void AfterMapLoad();
 
     void MakeViewports();
+
+    [[nodiscard]] bool HasViewports() const { return !m_pViewports.empty(); }
 
     SDL_Window* m_pWindow;
 
@@ -42,7 +44,6 @@ public:
 
 private:
     // Returns UEngine*, however QT and ue were interfering, so cast it yourself.
-    static UEngine* InitEngine();
     UViewport* CreateViewport(const wchar_t*Name, int RenMap, int Flags);
 
     std::vector<UViewport*> m_pViewports;

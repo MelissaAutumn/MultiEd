@@ -77,8 +77,9 @@ EDITOR_API FString GMapExt;
 #endif
 
 
-UnrealLaunch::UnrealLaunch() {
+UnrealLaunch::UnrealLaunch(bool launchEditor) {
     m_LogWindow = nullptr;
+    m_LaunchEditor = launchEditor;
 }
 
 UnrealLaunch::~UnrealLaunch() {
@@ -197,48 +198,18 @@ UEngine *UnrealLaunch::Boot(int argc, char **argv, const char* moduleName) {
                     GLog = &Warn;
                 }
 
-#ifdef EDITOR_BUILD
-                GIsClient     = GIsServer = GIsEditor = GLazyLoad = 1;
-                GIsScriptable = 0;
-#else
-                GIsServer		= 1;
-                GIsClient		= !ParseParam(appCmdLine(), TEXT("SERVER"));
-                GIsEditor		= 0;
-                GIsScriptable	= 1;
-                GLazyLoad		= !GIsClient || ParseParam(appCmdLine(), TEXT("LAZY"));
-#endif
-
-                // Init engine.
-                const auto engine = InitEngine();
-#ifdef EDITOR_BUILD
-                GEditor = CastChecked<UEditorEngine>(engine);
-
-                {
-                    // Initialize "last dir" array
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("PCX"), GLastDir[eLASTDIR_PCX], GUEDIni)) GLastDir[eLASTDIR_PCX]       = TEXT("..\\Textures");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("WAV"), GLastDir[eLASTDIR_WAV], GUEDIni)) GLastDir[eLASTDIR_WAV]       = TEXT("..\\Sounds");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("BRUSH"), GLastDir[eLASTDIR_BRUSH], GUEDIni)) GLastDir[eLASTDIR_BRUSH] = TEXT("..\\Maps");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("2DS"), GLastDir[eLASTDIR_2DS], GUEDIni)) GLastDir[eLASTDIR_2DS]       = TEXT("..\\Maps");
-#if ENGINE_VERSION == 227
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("USM"), GLastDir[eLASTDIR_USM], GUEDIni))		GLastDir[eLASTDIR_USM] = TEXT("..\\Meshes");
-#else
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("USM"), GLastDir[eLASTDIR_USM], GUEDIni)) GLastDir[eLASTDIR_USM] = TEXT("..\\System");
-#endif
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UMX"), GLastDir[eLASTDIR_UMX], GUEDIni)) GLastDir[eLASTDIR_UMX] = TEXT("..\\Music");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UAX"), GLastDir[eLASTDIR_UAX], GUEDIni)) GLastDir[eLASTDIR_UAX] = TEXT("..\\Sounds");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UTX"), GLastDir[eLASTDIR_UTX], GUEDIni)) GLastDir[eLASTDIR_UTX] = TEXT("..\\Textures");
-                    if (!GConfig->GetString(TEXT("Directories"), TEXT("UNR"), GLastDir[eLASTDIR_UNR], GUEDIni)) GLastDir[eLASTDIR_UNR] = TEXT("..\\Maps");
-
-                    if (!GConfig->GetString(TEXT("URL"), TEXT("MapExt"), GMapExt, SYSTEM_INI)) GMapExt = TEXT("unr");
-                    GEditor->Exec(*(FString::Printf(TEXT("MODE MAPEXT=%ls"), *GMapExt)));
-
+                if (m_LaunchEditor) {
+                    GIsClient     = GIsServer = GIsEditor = GLazyLoad = 1;
+                    GIsScriptable = 0;
+                } else {
+                    GIsServer		= 1;
+                    GIsClient		= !ParseParam(appCmdLine(), TEXT("SERVER"));
+                    GIsEditor		= 0;
+                    GIsScriptable	= 1;
+                    GLazyLoad		= !GIsClient || ParseParam(appCmdLine(), TEXT("LAZY"));
                 }
-
-                // Init input.
-                UInput::StaticInitInput();
-#endif
-
-                return engine;
+                // Init engine.
+                return InitEngine();
             }
             catch (...) {
                 // Chained abort.  Do cleanup.

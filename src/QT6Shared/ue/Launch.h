@@ -16,7 +16,7 @@ class UEngine;
 // Keeping things a little organized
 class UnrealLaunch {
 public:
-    UnrealLaunch();
+    UnrealLaunch(bool launchEditor);
     virtual ~UnrealLaunch();
 
     UEngine *Boot(int argc, char *argv[], const char* moduleName);
@@ -26,6 +26,8 @@ public:
 
 private:
     UEngine* InitEngine();
+
+    bool m_LaunchEditor;
 };
 
 #endif //LAUNCH_H

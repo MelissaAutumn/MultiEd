@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     auto windowIcon = QIcon("../Help/Unreal.ico");
     a.setWindowIcon(windowIcon);
 
-    auto unrealLaunch = new UnrealLaunch();
+    auto unrealLaunch = new UnrealLaunch(false);
 
     if (const auto engine = unrealLaunch->Boot(argc, argv, "QT6Launch"))
     {
