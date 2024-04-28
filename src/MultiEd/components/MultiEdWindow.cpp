@@ -73,7 +73,7 @@ void MultiEdWindow::Init() {
 
 
     // Temp until I make a button for it :)
-    auto pref = new Components::Preferences();
+    auto pref = new Components::Preferences("AdvancedOptionsTitle", "Window");
 
     g_pEditorAPI->RegisterRightClickEvent();
 

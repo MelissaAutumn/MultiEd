@@ -14,14 +14,16 @@ namespace Components {
 
 
     public:
-        Preferences();
+        Preferences(const QString &Key, const QString &Package);
         ~Preferences() override;
         void LogTree(const TCHAR* szCaption, int depth);
-        void AddItem(QTreeWidgetItem* parent, const TCHAR* caption, int depth);
+        void AddItems();
         void InitTree();
 
     private:
         QTreeWidget* m_TreeWidget;
+        QString Key;
+        QString Package;
     };
 
 } // Components
