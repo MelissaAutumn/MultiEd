@@ -9,37 +9,54 @@
 
 #include <QHBoxLayout>
 #include <queue>
+#include <map>
+#include <vector>
 
 #include "../TreeDelegates.h"
 
 #include "../../helpers/UnrealHelper.h"
 
 
-
 namespace Components {
-    Preferences::Preferences(const QString &Key, const QString &Package) {
-        this->Key = Key;
-        this->Package = Package;
-
+    Preferences::Preferences(UClass *UClass) {
         m_TreeWidget = nullptr;
 
-        this->setWindowTitle("Properties Window");
+        this->setAttribute(Qt::WA_DeleteOnClose);
 
         InitTree();
+
+        this->AddClassProperties(UClass, m_TreeWidget, true);
+        this->setWindowTitle(QString("%1 Properties").arg(QString::fromWCharArray(UClass->GetName())));
 
         this->setBaseSize(320, 640);
         this->show();
     }
 
+    Preferences::Preferences(const QString &Key, const QString &Package) {
+        this->Key = Key;
+        this->Package = Package;
+        this->setAttribute(Qt::WA_DeleteOnClose);
+        m_TreeWidget = nullptr;
+
+        this->setWindowTitle("Properties Window");
+
+        InitTree();
+        this->AddItems();
+
+        this->setBaseSize(320, 640);
+        this->show();
+    }
+
+
     Preferences::~Preferences() {
         delete m_TreeWidget;
     }
 
-    void Preferences::LogTree(const TCHAR* szCaption, int depth) {
+    void Preferences::LogTree(const TCHAR *szCaption, int depth) {
         TArray<struct FPreferencesInfo> aPrefs;
-        UObject::GetPreferences( aPrefs, szCaption, 0 );
+        UObject::GetPreferences(aPrefs, szCaption, 0);
 
-        for(int i = 0; i < aPrefs.Num(); i++) {
+        for (int i = 0; i < aPrefs.Num(); i++) {
             auto caption = Helpers::GetQStringFromFString(aPrefs(i).Caption);
             qDebug() << depth << QString::fromWCharArray(*aPrefs(i).ParentCaption) << "->" << caption;
             LogTree(*aPrefs(i).Caption, depth + 1);
@@ -56,23 +73,21 @@ namespace Components {
         this->Package.toWCharArray(package);
 
         auto category = LocalizeGeneral(key, package);
-
-        qInfo() << QString("Properties for LocalizeGeneral(%1, %2) = %3").arg(QString::fromWCharArray(key), QString::fromWCharArray(package), QString::fromWCharArray(category));
         this->setWindowTitle(QString::fromWCharArray(category));
 
         struct PrefQueueInfo {
             TArray<struct FPreferencesInfo> prefs;
-            QTreeWidgetItem* parent;
+            QTreeWidgetItem *parent;
         };
 
         TArray<struct FPreferencesInfo> firstPrefs;
-        UObject::GetPreferences( firstPrefs, category, 1 );
+        UObject::GetPreferences(firstPrefs, category, 1);
 
         std::queue<PrefQueueInfo> queue;
         queue.push(PrefQueueInfo({firstPrefs, nullptr}));
 
         // breath-first search
-        while(!queue.empty()) {
+        while (!queue.empty()) {
             auto pop = queue.front();
 
             auto parent = pop.parent;
@@ -80,7 +95,7 @@ namespace Components {
 
             queue.pop();
 
-            for(auto i = 0; i < prefs.Num(); i++) {
+            for (auto i = 0; i < prefs.Num(); i++) {
                 auto pref = prefs(i);
 
                 auto caption = QString::fromWCharArray(*pref.Caption);
@@ -93,33 +108,59 @@ namespace Components {
                 }
 
                 // Loop through properties if they have any!
-                if (const auto uClass = UObject::StaticLoadClass( UObject::StaticClass(), nullptr, *pref.Class, nullptr, LOAD_NoWarn, nullptr )) {
-                    uClass->GetDefaultObject()->LoadConfig(1);//!!
-
-                    for (TFieldIterator<UProperty> It(uClass); It; ++It) {
-                        //if (It->Category == FName(uClass->GetName()))
-                        {
-                            QString name = QString::fromWCharArray(It->GetName());
-                            QStringList list(name);
-
-                            FString val = TEXT("");
-                            BYTE* mainOffset = &uClass->Defaults(0);
-                            It->ExportText(0, val, mainOffset, mainOffset, PPF_Localized);
-                            QString qVal = QString::fromWCharArray(*val);
-                            list.push_back(qVal);
-
-                            auto childItem = new QTreeWidgetItem(item);
-                            childItem->setFlags(Qt::ItemIsEditable|Qt::ItemIsEnabled);
-
-                            childItem->setText(0, list[0]);
-                            childItem->setText(1, list[1]);
-                        }
-                    }
+                if (const auto uClass = UObject::StaticLoadClass(UObject::StaticClass(), nullptr, *pref.Class, nullptr,
+                                                                 LOAD_NoWarn, nullptr)) {
+                    uClass->GetDefaultObject()->LoadConfig(1); //!!
+                    this->AddClassProperties(uClass, item, false);
                 }
 
                 TArray<struct FPreferencesInfo> nextPrefs;
-                UObject::GetPreferences( nextPrefs, *pref.Caption, 0 );
+                UObject::GetPreferences(nextPrefs, *pref.Caption, 0);
                 queue.push({nextPrefs, item});
+            }
+        }
+    }
+
+    template<typename TreeWidgetLike>
+    void Preferences::AddClassProperties(UClass *UClass, TreeWidgetLike *Parent, bool BuildCategories) {
+        if (!UClass) {
+            return;
+        }
+
+        std::map<QString, std::vector<QTreeWidgetItem *> > treeMap;
+        for (TFieldIterator<UProperty> It(UClass); It; ++It) {
+            // This seems to be correct?
+            if (It->Category == FName(NAME_None)) {
+                continue;
+            }
+
+            QString name = QString::fromWCharArray(It->GetName());
+            QStringList list(name);
+
+            FString val = TEXT("");
+            BYTE *mainOffset = &UClass->Defaults(0);
+            It->ExportText(0, val, mainOffset, mainOffset, PPF_Localized);
+            QString qVal = QString::fromWCharArray(*val);
+            list.push_back(qVal);
+
+            auto childItem = new QTreeWidgetItem(!BuildCategories ? Parent : nullptr);
+            childItem->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled);
+
+            childItem->setText(0, list[0]);
+            childItem->setText(1, list[1]);
+
+            if (BuildCategories) {
+                auto category = QString::fromWCharArray(*It->Category);
+                treeMap[category].push_back(childItem);
+            }
+        }
+
+        for (const auto &[categoryName, children]: treeMap) {
+            auto categoryItem = new QTreeWidgetItem(Parent);
+            categoryItem->setText(0, categoryName);
+
+            for (auto child: children) {
+                categoryItem->addChild(child);
             }
         }
     }
@@ -139,7 +180,5 @@ namespace Components {
 
         layout->addWidget(m_TreeWidget);
         this->setLayout(layout);
-
-        this->AddItems();
     }
 } // Components

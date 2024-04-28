@@ -286,7 +286,7 @@ void Viewport::OpenActorMenu() {
     replaceMenu.addAction(QString("Replace with %1 (keep &values)").arg(g_pEditorAPI->GetCurrentClassName()), [=] { g_pEditorAPI->ActorReplaceClassKeepValues(); });
 
     QMenu menu("Actor Menu");
-    menu.addAction(QString("Actor &Properties (%1 Selected)"));
+    menu.addAction(QString("Actor &Properties (%1 Selected)"), [=] { g_pEditorAPI->ActorProperties(); });
     menu.addSeparator();
     menu.addAction("Add light here", [=] {
         g_pEditorAPI->AddLightHere();

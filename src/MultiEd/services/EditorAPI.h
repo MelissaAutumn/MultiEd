@@ -185,6 +185,8 @@ namespace Services {
 
         void EditPaste();
 
+        void ActorProperties();
+
         /*
          * Clip Commands
          */

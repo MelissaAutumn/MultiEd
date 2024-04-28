@@ -20,6 +20,8 @@
 
 #include "../ue/UnrealGlue.h"
 #include <SDLDrv.h>
+
+#include "../components/Preferences/Preferences.h"
 extern UnrealGlue *g_pUnreal;
 
 #define API_IS_AVAILABLE if (!GEditor) { return; }
@@ -889,4 +891,23 @@ void Services::EditorAPI::EditCopy() {
 
 void Services::EditorAPI::EditPaste() {
     this->ExecCommand("EDIT PASTE");
+}
+
+void Services::EditorAPI::ActorProperties() {
+    API_IS_AVAILABLE;
+    if (m_selectionData.empty())
+    {
+        return;
+    }
+
+    auto lastSelection = m_selectionData[m_selectionData.size()-1];
+
+    if (lastSelection.type != SelectedType::ST_ACTOR)
+    {
+        return;
+    }
+
+    auto uClass = GEditor->Level->Actors(lastSelection.index)->GetClass();
+
+    auto prefs = new Components::Preferences(uClass);
 }
