@@ -4,6 +4,8 @@
 
 #include "MultiEdWindow.h"
 
+#include "Preferences/Preferences.h"
+
 using namespace Components;
 
 // Timer resolution for updates
@@ -71,7 +73,7 @@ void MultiEdWindow::Init() {
 
 
     // Temp until I make a button for it :)
-    //auto pref = new Components::Preferences();
+    auto pref = new Components::Preferences();
 
     g_pEditorAPI->RegisterRightClickEvent();
 

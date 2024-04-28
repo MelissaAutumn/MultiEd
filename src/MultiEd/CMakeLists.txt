@@ -80,6 +80,7 @@ add_executable(MultiEd main.cpp
         components/ToolBar/Toolbar.cpp
         components/Viewport/Viewport.cpp
         components/Viewport/ViewportSplitter.cpp
+        components/TreeDelegates.h
 )
 
 # Setup some links to shared libraries

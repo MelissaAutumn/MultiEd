@@ -6,16 +6,22 @@
 #define MULTIED_PREFERENCES_H
 
 #include <Core.h>
+#include <QDialog>
 
 namespace Components {
 
-    class Preferences {
+    class Preferences : QDialog {
 
 
     public:
         Preferences();
+        ~Preferences() override;
         void LogTree(const TCHAR* szCaption, int depth);
+        void AddItem(QTreeWidgetItem* parent, const TCHAR* caption, int depth);
+        void InitTree();
 
+    private:
+        QTreeWidget* m_TreeWidget;
     };
 
 } // Components
