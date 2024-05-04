@@ -7,6 +7,7 @@
 
 #include <QApplication>
 #include <QtDebug>
+
 #include "../helpers/Defines.h"
 
 class AActor;
@@ -185,7 +186,12 @@ namespace Services {
 
         void EditPaste();
 
-        void ActorProperties();
+        void SelectedProperties();
+
+        void LevelProperties();
+
+
+        SelectedData *GetLastSelected();
 
         /*
          * Clip Commands

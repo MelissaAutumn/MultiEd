@@ -286,7 +286,7 @@ void Viewport::OpenActorMenu() {
     replaceMenu.addAction(QString("Replace with %1 (keep &values)").arg(g_pEditorAPI->GetCurrentClassName()), [=] { g_pEditorAPI->ActorReplaceClassKeepValues(); });
 
     QMenu menu("Actor Menu");
-    menu.addAction(QString("Actor &Properties (%1 Selected)"), [=] { g_pEditorAPI->ActorProperties(); });
+    menu.addAction(QString("Actor &Properties (%1 Selected)"), [=] { g_pEditorAPI->SelectedProperties(); });
     menu.addSeparator();
     menu.addAction("Add light here", [=] {
         g_pEditorAPI->AddLightHere();
@@ -383,7 +383,7 @@ void Viewport::OpenSurfaceMenu() {
 
 
     QMenu menu("Surface Menu");
-    menu.addAction(QString("Surface &Properties (%1 Selected)"));
+    menu.addAction(QString("Surface &Properties (%1 Selected)"), [=] { g_pEditorAPI->SelectedProperties(); });
     menu.addSeparator();
     if (g_pEditorAPI->HasBrowserClassSelected())
     {
@@ -426,7 +426,7 @@ void Viewport::OpenSurfaceMenu() {
 
 void Viewport::OpenDefaultMenu() {
     QMenu menu("PopUp Menu");
-    menu.addAction(QString("Level Properties"));
+    menu.addAction(QString("Level Properties"), [=] { g_pEditorAPI->LevelProperties(); });
     menu.addSeparator();
     menu.addAction("Add light here", [=] {
         g_pEditorAPI->AddLightHere();

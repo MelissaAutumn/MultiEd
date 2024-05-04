@@ -18,15 +18,16 @@
 
 
 namespace Components {
-    Preferences::Preferences(UClass *UClass) {
+    Preferences::Preferences(UObject *UObj) {
         m_TreeWidget = nullptr;
 
         this->setAttribute(Qt::WA_DeleteOnClose);
 
         InitTree();
 
-        this->AddClassProperties(UClass, m_TreeWidget, true);
-        this->setWindowTitle(QString("%1 Properties").arg(QString::fromWCharArray(UClass->GetName())));
+        m_UObj = UObj;
+        this->AddClassProperties(UObj->GetClass(), m_TreeWidget, true);
+        this->setWindowTitle(QString("%1 Properties").arg(QString::fromWCharArray(UObj->GetClass()->GetName())));
 
         this->setBaseSize(320, 640);
         this->show();
@@ -38,6 +39,7 @@ namespace Components {
         this->setAttribute(Qt::WA_DeleteOnClose);
         m_TreeWidget = nullptr;
 
+        m_UObj = nullptr;
         this->setWindowTitle("Properties Window");
 
         InitTree();
@@ -138,7 +140,15 @@ namespace Components {
             QStringList list(name);
 
             FString val = TEXT("");
-            BYTE *mainOffset = &UClass->Defaults(0);
+
+            BYTE *mainOffset = nullptr;
+            if (!m_UObj) {
+                mainOffset = &UClass->Defaults(0);
+            } else {
+                mainOffset = reinterpret_cast<BYTE*>(m_UObj);
+                //mainOffset -= It->Offset;
+            }
+
             It->ExportText(0, val, mainOffset, mainOffset, PPF_Localized);
             QString qVal = QString::fromWCharArray(*val);
             list.push_back(qVal);

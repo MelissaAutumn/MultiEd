@@ -893,21 +893,42 @@ void Services::EditorAPI::EditPaste() {
     this->ExecCommand("EDIT PASTE");
 }
 
-void Services::EditorAPI::ActorProperties() {
+void Services::EditorAPI::SelectedProperties() {
+
+    auto lastSelection = this->GetLastSelected();
+
+    if (!lastSelection)
+    {
+        return;
+    }
+
+    auto uClass = GEditor->Level->Actors(lastSelection->index)->GetClass();
+
+    // This won't leak as Preferences deletes on close
+    // ReSharper disable once CppDFAMemoryLeak
+    auto prefs = new Components::Preferences(GEditor->Level->Actors(lastSelection->index));
+}
+
+void Services::EditorAPI::LevelProperties() {
     API_IS_AVAILABLE;
+
+    if (!GEditor->Level) {
+        return;
+    }
+
+    qInfo() << QString::fromWCharArray(GEditor->Level->GetLevelInfo()->GetName());
+
+    // This won't leak as Preferences deletes on close
+    // ReSharper disable once CppDFAMemoryLeak
+    auto prefs = new Components::Preferences(GEditor->Level->Actors(0));
+}
+
+SelectedData* Services::EditorAPI::GetLastSelected() {
+    API_IS_AVAILABLE_VAL(nullptr);
     if (m_selectionData.empty())
     {
-        return;
+        return nullptr;
     }
 
-    auto lastSelection = m_selectionData[m_selectionData.size()-1];
-
-    if (lastSelection.type != SelectedType::ST_ACTOR)
-    {
-        return;
-    }
-
-    auto uClass = GEditor->Level->Actors(lastSelection.index)->GetClass();
-
-    auto prefs = new Components::Preferences(uClass);
+    return &m_selectionData[m_selectionData.size()-1];
 }

@@ -19,7 +19,7 @@ namespace Components {
          * Initialize preferences for a single class and its properties
          * @param UClass
          */
-        explicit Preferences(UClass* UClass);
+        explicit Preferences(UObject* UObj);
 
         /**
          * Initialize preferences for config values of a given package and its properties.
@@ -39,6 +39,7 @@ namespace Components {
         QTreeWidget* m_TreeWidget;
         QString Key;
         QString Package;
+        UObject* m_UObj;
     };
 
 } // Components
