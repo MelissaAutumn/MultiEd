@@ -81,6 +81,8 @@ add_executable(MultiEd main.cpp
         components/Viewport/Viewport.cpp
         components/Viewport/ViewportSplitter.cpp
         components/TreeDelegates.h
+        components/Preferences/PreferencesTree.cpp
+        components/Preferences/PreferencesTree.h
 )
 
 # Setup some links to shared libraries

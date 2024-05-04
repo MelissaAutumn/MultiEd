@@ -8,8 +8,10 @@
 #include <Core.h>
 #include <QDialog>
 #include <QTreeWidget>
+#include <QVBoxLayout>
 
 namespace Components {
+    class PreferencesTree;
 
     class Preferences : QDialog {
 
@@ -28,18 +30,11 @@ namespace Components {
          */
         Preferences(const QString &Key, const QString &Package);
         ~Preferences() override;
-        void LogTree(const TCHAR* szCaption, int depth);
-        void AddItems();
-
-        template<typename TreeWidgetLike>
-        void AddClassProperties(UClass* UClass, TreeWidgetLike* Parent, bool BuildCategories);
-        void InitTree();
 
     private:
-        QTreeWidget* m_TreeWidget;
-        QString Key;
-        QString Package;
-        UObject* m_UObj;
+        QVBoxLayout* m_Layout;
+        PreferencesTree* m_TreeWidget;
+
     };
 
 } // Components

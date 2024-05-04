@@ -10,6 +10,7 @@
 #include <QHBoxLayout>
 #include <QDockWidget>
 #include <QLabel>
+#include <QWindow>
 #include <csignal>
 
 // Components
@@ -24,8 +25,10 @@
 #include "./ToolBar/ToolBar.h"
 #include "./Viewport/Viewport.h"
 #include "./SideBar/OrderedSideBar.h"
-#include "../services/EditorAPI.h"
+#include "Preferences/PreferencesTree.h"
 #include "Viewport/ViewportSplitterContainer.h"
+
+#include "../services/EditorAPI.h"
 
 #include <SDL2/SDL.h>
 #include "../helpers/Defines.h"
@@ -41,7 +44,9 @@ namespace Components {
         std::vector<Viewport*> m_viewports;
 
         // Components
+        PreferencesTree* m_ActiveProperties{};
         QDockWidget* m_pDockWidget{};
+        QDockWidget* m_PropertiesDock{};
         OrderedSideBar* m_pOrderedSideBar{};
         FileMenu* m_pFileMenu{};
         EditMenu* m_pEditMenu{};
@@ -66,6 +71,7 @@ namespace Components {
 
         SDL_Window* m_pSDLWindow{};
     signals:
+        void leftClick(WId windowId, bool isRelased, uint32_t timestamp);
         void rightClick(WId windowId, bool isReleased, uint32_t timestamp);
     };
 }

@@ -566,7 +566,7 @@ void Services::EditorAPI::SetCurrentTexture()
     this->ExecCommand("POLY SETTEXTURE");
 }
 
-void Services::EditorAPI::RegisterRightClickEvent()
+void Services::EditorAPI::RegisterClickEvents()
 {
     auto rd = FReturnDevice();
 
@@ -576,6 +576,15 @@ void Services::EditorAPI::RegisterRightClickEvent()
     if (rd.returnType == EName::NAME_Int)
     {
         m_rightClickEventId = rd.returnValue.ui;
+    }
+
+    rd = FReturnDevice();
+
+    GEditor->Client->Exec(L"REGISTER_INPUTEVENT KEY=1", rd);
+
+    if (rd.returnType == EName::NAME_Int)
+    {
+        m_leftClickEventId = rd.returnValue.ui;
     }
 }
 
@@ -925,10 +934,19 @@ void Services::EditorAPI::LevelProperties() {
 
 SelectedData* Services::EditorAPI::GetLastSelected() {
     API_IS_AVAILABLE_VAL(nullptr);
+
     if (m_selectionData.empty())
     {
         return nullptr;
     }
 
     return &m_selectionData[m_selectionData.size()-1];
+}
+
+UObject* Services::EditorAPI::GetLastSelectedObject() {
+    auto lastSelection = GetLastSelected();
+    if (!lastSelection) {
+        return nullptr;
+    }
+    return GEditor->Level->Actors(lastSelection->index);
 }

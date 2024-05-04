@@ -3,8 +3,8 @@
 //
 
 #include "MultiEdWindow.h"
-
 #include "Preferences/Preferences.h"
+#include "Preferences/PreferencesTree.h"
 
 using namespace Components;
 
@@ -26,7 +26,7 @@ MultiEdWindow::~MultiEdWindow() {
     delete m_pQuadView;
 
     // Clean up any viewports
-    for(auto viewport : m_viewports) {
+    for (auto viewport: m_viewports) {
         delete viewport;
     }
 }
@@ -53,18 +53,20 @@ void MultiEdWindow::Update() {
     SDL_Event event;
     SDL_PumpEvents();
 
-    while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_USEREVENT, SDL_LASTEVENT))
-    {
+    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_USEREVENT, SDL_LASTEVENT)) {
         // IK_RightMouse from EnginePrivate.h
-        if (event.user.code == 2)
-        {
+        if (event.user.code == 2) {
             auto action = reinterpret_cast<int64_t>(event.user.data1);
 
             // IST_Release = 3
             this->rightClick(event.user.windowID, action == 3, event.user.timestamp);
+        } else if (event.user.code == 1) {
+            auto action = reinterpret_cast<int64_t>(event.user.data1);
+
+            // IST_Release = 3
+            this->leftClick(event.user.windowID, action == 3, event.user.timestamp);
         }
     }
-
 }
 
 void MultiEdWindow::Init() {
@@ -75,13 +77,14 @@ void MultiEdWindow::Init() {
     // Temp until I make a button for it :)
     auto pref = new Components::Preferences("AdvancedOptionsTitle", "Window");
 
-    g_pEditorAPI->RegisterRightClickEvent();
+    g_pEditorAPI->RegisterClickEvents();
 
     // Side Bar
 
     // Create a dock, and set some zones / features
     m_pDockWidget = new QDockWidget();
-    m_pDockWidget->setFeatures(QDockWidget::DockWidgetMovable);
+    m_pDockWidget->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    m_pDockWidget->setWindowTitle("Modes");
     m_pDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     // Create our sidebar
     m_pOrderedSideBar = new Components::OrderedSideBar();
@@ -89,9 +92,32 @@ void MultiEdWindow::Init() {
 
     // Add our sidebar / dock
     m_pDockWidget->setWidget(m_pOrderedSideBar->GetWidget());
+
     m_pDockWidget->setMaximumWidth(m_pOrderedSideBar->GetWidget()->sizeHint().width());
 
     this->addDockWidget(Qt::LeftDockWidgetArea, m_pDockWidget);
+
+
+    m_PropertiesDock = new QDockWidget();
+    m_PropertiesDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+    m_PropertiesDock->setWindowTitle("Active Properties");
+    m_PropertiesDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    m_ActiveProperties = new PreferencesTree();
+    m_PropertiesDock->setWidget(m_ActiveProperties);
+
+    connect(this, &MultiEdWindow::leftClick, [=](WId windowId, bool isReleased, uint32_t timestamp) {
+        if (!isReleased) {
+            return;
+        }
+        g_pEditorAPI->FindSelected();
+        UObject* object = g_pEditorAPI->GetLastSelectedObject();
+        if (!object) {
+            return;
+        }
+        m_ActiveProperties->Reinitialize(object);
+    });
+
+    this->addDockWidget(Qt::RightDockWidgetArea, m_PropertiesDock);
 
     m_pFileMenu = new Components::FileMenu(this);
     m_pFileMenu->Init();
@@ -133,7 +159,6 @@ void MultiEdWindow::Init() {
 
 
     this->show();
-
 }
 
 #include "moc_MultiEdWindow.cpp"

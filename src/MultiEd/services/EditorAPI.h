@@ -15,6 +15,7 @@ class AActor;
 template< class T > class TArray;
 class UBrushBuilder;
 class UViewport;
+class UObject;
 
 struct ViewportData {
     UViewport* viewport;
@@ -193,6 +194,8 @@ namespace Services {
 
         SelectedData *GetLastSelected();
 
+        UObject *GetLastSelectedObject();
+
         /*
          * Clip Commands
          */
@@ -314,7 +317,7 @@ namespace Services {
         QString GetCurrentTextureName();
         void SetCurrentTexture();
 
-        void RegisterRightClickEvent();
+        void RegisterClickEvents();
         ViewportData* FindViewport(WId pViewportID);
         uint32_t GetViewportSDLWindowId(WId pViewportID);
 
@@ -326,6 +329,7 @@ namespace Services {
 
 
         uint32_t m_rightClickEventId = 0;
+        uint32_t m_leftClickEventId = 0;
 
 
     };
